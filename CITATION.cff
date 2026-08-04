@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this repository or one of its simulations, please cite it using this metadata."
+title: "Physics Animations"
+type: software
+authors:
+  - family-names: "Santos-Pereira"
+    given-names: "Osvaldo L."
+    orcid: "https://orcid.org/0000-0003-2231-517X"
+repository-code: "https://github.com/ozsp12/physics_anim"
+url: "https://ozsp12.github.io/physics_anim/"
+version: 1.0.0
+date-released: 2026-08-03
+keywords:
+  - physics education
+  - computational physics
+  - scientific visualization
+  - classical mechanics
+  - vertical loop

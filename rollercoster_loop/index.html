@@ -1,0 +1,1179 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Simulação interativa do movimento de uma partícula em um loop vertical, com controles de altura h e raio R.">
+  <meta name="author" content="Dr. Osvaldo L. Santos-Pereira">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <title>Loop Vertical — Simulação Interativa</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #08111f;
+      --panel: #101b2e;
+      --panel-2: #15233a;
+      --line: #2b3d59;
+      --text: #edf4ff;
+      --muted: #9fb0c8;
+      --accent: #55c8ff;
+      --accent-2: #7cf1c8;
+      --warning: #ffca6a;
+      --danger: #ff7c8e;
+      --track: #dce9f7;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(85, 200, 255, 0.13), transparent 32rem),
+        linear-gradient(180deg, #07101d, var(--bg));
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, input { font: inherit; }
+
+    .app {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 5px;
+      font-size: clamp(1.35rem, 2.7vw, 2rem);
+      font-weight: 680;
+      letter-spacing: -0.025em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .challenge-chip {
+      flex: 0 0 auto;
+      border: 1px solid rgba(85, 200, 255, 0.36);
+      border-radius: 999px;
+      padding: 9px 13px;
+      background: rgba(85, 200, 255, 0.08);
+      color: #cfefff;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 330px) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(21, 35, 58, 0.96), rgba(13, 24, 42, 0.96));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 18px 45px var(--shadow);
+    }
+
+    .controls {
+      padding: 17px;
+    }
+
+    .section-title {
+      margin: 0 0 13px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 750;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .control {
+      margin-bottom: 19px;
+    }
+
+    .control-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .control label {
+      color: var(--text);
+      font-size: 0.96rem;
+      font-weight: 600;
+    }
+
+    .value {
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      font-weight: 720;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .range-scale {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.73rem;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin: 4px 0 18px;
+    }
+
+    button {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: #17263e;
+      color: var(--text);
+      padding: 9px 11px;
+      cursor: pointer;
+      transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+    }
+
+    button:hover { border-color: #4b668c; background: #1b2d49; }
+    button:active { transform: translateY(1px); }
+    button:focus-visible { outline: 3px solid rgba(85, 200, 255, 0.4); outline-offset: 2px; }
+
+    .primary {
+      border-color: rgba(85, 200, 255, 0.62);
+      background: var(--accent);
+      color: #03131e;
+      font-weight: 760;
+    }
+
+    .primary:hover { background: #7ad5ff; border-color: #9de2ff; }
+
+    .wide { grid-column: 1 / -1; }
+
+    .checks {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 17px;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--muted);
+      font-size: 0.91rem;
+      cursor: pointer;
+    }
+
+    .check-row input { accent-color: var(--accent); }
+
+    .prediction {
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(4, 12, 23, 0.42);
+    }
+
+    .prediction strong { display: block; margin-bottom: 5px; }
+    .prediction p { margin: 0; color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
+
+    .stage {
+      overflow: hidden;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 12px 13px;
+      background: var(--panel);
+    }
+
+    .metric span {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      display: block;
+      overflow: hidden;
+      color: var(--text);
+      font-size: clamp(0.9rem, 1.5vw, 1.08rem);
+      font-variant-numeric: tabular-nums;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      min-height: 360px;
+      background: #07111f;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .canvas-message {
+      position: absolute;
+      left: 50%;
+      top: 17px;
+      transform: translateX(-50%);
+      max-width: calc(100% - 30px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      padding: 7px 12px;
+      background: rgba(6, 16, 30, 0.78);
+      backdrop-filter: blur(6px);
+      color: var(--text);
+      font-size: 0.86rem;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .energy {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      padding: 13px;
+      border-top: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .energy-item span {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .bar {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #263751;
+    }
+
+    .bar > i {
+      display: block;
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      transition: width 70ms linear;
+    }
+
+    .kinetic i { background: var(--accent); }
+    .potential i { background: var(--warning); }
+    .total i { background: var(--accent-2); }
+
+    details {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(13, 24, 42, 0.72);
+      padding: 12px 14px;
+    }
+
+    summary { cursor: pointer; font-weight: 650; }
+
+    details p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    code {
+      color: #d7f5ff;
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    .footer-note {
+      margin: 12px 2px 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .controls { order: 2; }
+      .stage { order: 1; }
+      .hud { grid-template-columns: repeat(3, 1fr); }
+      .hud .metric:nth-child(4), .hud .metric:nth-child(5) { grid-column: span 1; }
+    }
+
+    @media (max-width: 600px) {
+      .app { padding: 10px; }
+      .topbar { display: block; }
+      .challenge-chip { display: inline-block; margin-top: 10px; }
+      .hud { grid-template-columns: repeat(2, 1fr); }
+      .metric:last-child { grid-column: 1 / -1; }
+      .canvas-wrap { min-height: 310px; aspect-ratio: 4 / 3; }
+      .energy { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <h1>Loop vertical: desafio de energia e contato</h1>
+        <p class="subtitle">Ajuste a altura inicial <em>h</em> e o raio <em>R</em>. Tente completar o loop usando a menor altura possível.</p>
+      </div>
+      <div class="challenge-chip">Meta teórica: h = 2,5R</div>
+    </header>
+
+    <section class="layout">
+      <aside class="panel controls" aria-label="Controles da simulação">
+        <h2 class="section-title">Parâmetros</h2>
+
+        <div class="control">
+          <div class="control-head">
+            <label for="heightRange">Altura inicial h</label>
+            <output class="value" id="heightValue" for="heightRange">5,00 m</output>
+          </div>
+          <input id="heightRange" type="range" min="0.50" max="8.00" step="0.05" value="5.00">
+          <div class="range-scale"><span>0,50 m</span><span>8,00 m</span></div>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label for="radiusRange">Raio do loop R</label>
+            <output class="value" id="radiusValue" for="radiusRange">2,00 m</output>
+          </div>
+          <input id="radiusRange" type="range" min="0.40" max="2.50" step="0.05" value="2.00">
+          <div class="range-scale"><span>0,40 m</span><span>2,50 m</span></div>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label for="timeRange">Velocidade da simulação</label>
+            <output class="value" id="timeValue" for="timeRange">1,00×</output>
+          </div>
+          <input id="timeRange" type="range" min="0.25" max="2.00" step="0.05" value="1.00">
+        </div>
+
+        <div class="button-grid">
+          <button class="primary" id="playButton" type="button">Iniciar</button>
+          <button id="resetButton" type="button">Reiniciar</button>
+          <button class="wide" id="criticalButton" type="button">Definir h crítico = 2,5R</button>
+        </div>
+
+        <div class="checks">
+          <label class="check-row"><input id="vectorsCheck" type="checkbox" checked> Mostrar vetores de força e velocidade</label>
+          <label class="check-row"><input id="trailCheck" type="checkbox" checked> Mostrar rastro</label>
+          <label class="check-row"><input id="gridCheck" type="checkbox" checked> Mostrar grade e medidas</label>
+        </div>
+
+        <h2 class="section-title">Previsão</h2>
+        <div class="prediction" aria-live="polite">
+          <strong id="predictionTitle">Caso crítico</strong>
+          <p id="predictionText">No topo, a força normal tende a zero. Em aritmética exata, a partícula completa o loop.</p>
+        </div>
+      </aside>
+
+      <section class="panel stage" aria-label="Simulação do loop vertical">
+        <div class="hud" aria-live="polite">
+          <div class="metric"><span>Estado</span><strong id="stateMetric">Pronto</strong></div>
+          <div class="metric"><span>h/R</span><strong id="ratioMetric">2,500</strong></div>
+          <div class="metric"><span>Velocidade</span><strong id="speedMetric">0,00 m/s</strong></div>
+          <div class="metric"><span>N/m</span><strong id="normalMetric">—</strong></div>
+          <div class="metric"><span>Pontuação</span><strong id="scoreMetric">1000</strong></div>
+        </div>
+
+        <div class="canvas-wrap" id="canvasWrap">
+          <canvas id="simCanvas" aria-label="Animação de uma partícula descendo uma rampa e percorrendo um loop vertical"></canvas>
+          <div class="canvas-message" id="canvasMessage">Pressione Iniciar ou a barra de espaço</div>
+        </div>
+
+        <div class="energy" aria-label="Distribuição da energia mecânica">
+          <div class="energy-item kinetic">
+            <span><b>Energia cinética</b><b id="kineticText">0%</b></span>
+            <div class="bar"><i id="kineticBar"></i></div>
+          </div>
+          <div class="energy-item potential">
+            <span><b>Energia potencial</b><b id="potentialText">100%</b></span>
+            <div class="bar"><i id="potentialBar"></i></div>
+          </div>
+          <div class="energy-item total">
+            <span><b>Energia mecânica</b><b id="totalText">100%</b></span>
+            <div class="bar"><i id="totalBar"></i></div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <details>
+      <summary>Modelo físico utilizado</summary>
+      <p>
+        A partícula parte do repouso e não há atrito. No loop, a conservação da energia fornece
+        <code>v² = 2g[h − R(1 − cos θ)]</code>. A aceleração normal por unidade de massa é
+        <code>N/m = v²/R + g cos θ</code>. Para manter contato no topo, é necessário
+        <code>v²_top ≥ gR</code>, o que produz a condição mínima <code>h ≥ 5R/2</code>.
+        A rampa é uma curva suave ilustrativa; sua dinâmica tangencial é integrada numericamente.
+      </p>
+    </details>
+
+    <p class="footer-note">Atalhos: espaço inicia ou pausa; tecla R reinicia. O corpo é tratado como partícula deslizante, não como esfera rolante. Projeto: <a href="https://github.com/ozsp12/physics_anim" style="color: var(--accent);">Physics Animations</a>, Dr. Osvaldo L. Santos-Pereira.</p>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const G = 9.81;
+      const MASS = 1;
+      const TAU = Math.PI * 2;
+
+      const el = {
+        h: document.getElementById('heightRange'),
+        r: document.getElementById('radiusRange'),
+        time: document.getElementById('timeRange'),
+        hValue: document.getElementById('heightValue'),
+        rValue: document.getElementById('radiusValue'),
+        timeValue: document.getElementById('timeValue'),
+        play: document.getElementById('playButton'),
+        reset: document.getElementById('resetButton'),
+        critical: document.getElementById('criticalButton'),
+        vectors: document.getElementById('vectorsCheck'),
+        trail: document.getElementById('trailCheck'),
+        grid: document.getElementById('gridCheck'),
+        predictionTitle: document.getElementById('predictionTitle'),
+        predictionText: document.getElementById('predictionText'),
+        state: document.getElementById('stateMetric'),
+        ratio: document.getElementById('ratioMetric'),
+        speed: document.getElementById('speedMetric'),
+        normal: document.getElementById('normalMetric'),
+        score: document.getElementById('scoreMetric'),
+        message: document.getElementById('canvasMessage'),
+        canvas: document.getElementById('simCanvas'),
+        wrap: document.getElementById('canvasWrap'),
+        kineticBar: document.getElementById('kineticBar'),
+        potentialBar: document.getElementById('potentialBar'),
+        totalBar: document.getElementById('totalBar'),
+        kineticText: document.getElementById('kineticText'),
+        potentialText: document.getElementById('potentialText'),
+        totalText: document.getElementById('totalText')
+      };
+
+      const ctx = el.canvas.getContext('2d');
+
+      const sim = {
+        running: false,
+        phase: 'ready',
+        t: 0,
+        h: Number(el.h.value),
+        R: Number(el.r.value),
+        timeScale: Number(el.time.value),
+        ramp: [],
+        rampLength: 0,
+        s: 0,
+        v: 0,
+        theta: 0,
+        x: 0,
+        y: 0,
+        vx: 0,
+        vy: 0,
+        normal: null,
+        trail: [],
+        completed: false,
+        collisionArmed: false,
+        lastTimestamp: performance.now(),
+        accumulated: 0,
+        view: null
+      };
+
+      function format(value, digits = 2) {
+        return value.toLocaleString('pt-BR', {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits
+        });
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
+      function cubic(p0, p1, p2, p3, t) {
+        const u = 1 - t;
+        const b0 = u * u * u;
+        const b1 = 3 * u * u * t;
+        const b2 = 3 * u * t * t;
+        const b3 = t * t * t;
+        return {
+          x: b0 * p0.x + b1 * p1.x + b2 * p2.x + b3 * p3.x,
+          y: b0 * p0.y + b1 * p1.y + b2 * p2.y + b3 * p3.y
+        };
+      }
+
+      function buildRamp() {
+        const L = Math.max(3.2 * sim.R, 4.2);
+        const p0 = { x: -L, y: sim.h };
+        const p1 = { x: -0.83 * L, y: Math.max(0.12 * sim.h, 0.55 * sim.h) };
+        const p2 = { x: -0.42 * L, y: 0 };
+        const p3 = { x: 0, y: 0 };
+        const points = [];
+        let total = 0;
+        let previous = cubic(p0, p1, p2, p3, 0);
+        points.push({ ...previous, s: 0 });
+        for (let i = 1; i <= 700; i++) {
+          const t = i / 700;
+          const point = cubic(p0, p1, p2, p3, t);
+          total += Math.hypot(point.x - previous.x, point.y - previous.y);
+          points.push({ ...point, s: total });
+          previous = point;
+        }
+        sim.ramp = points;
+        sim.rampLength = total;
+      }
+
+      function sampleRamp(s) {
+        const target = clamp(s, 0, sim.rampLength);
+        let lo = 0;
+        let hi = sim.ramp.length - 1;
+        while (lo + 1 < hi) {
+          const mid = (lo + hi) >> 1;
+          if (sim.ramp[mid].s < target) lo = mid;
+          else hi = mid;
+        }
+        const a = sim.ramp[lo];
+        const b = sim.ramp[hi];
+        const span = Math.max(1e-9, b.s - a.s);
+        const t = (target - a.s) / span;
+        const x = lerp(a.x, b.x, t);
+        const y = lerp(a.y, b.y, t);
+        const tx = (b.x - a.x) / span;
+        const ty = (b.y - a.y) / span;
+        return { x, y, tx, ty };
+      }
+
+      function prediction() {
+        const q = sim.h / sim.R;
+        const hCritical = 2.5 * sim.R;
+        let title;
+        let text;
+        if (q > 2.5 + 1e-6) {
+          title = 'Completa o loop';
+          text = `Há margem de contato no topo. A altura excede o mínimo em ${format(sim.h - hCritical, 2)} m.`;
+        } else if (Math.abs(q - 2.5) <= 1e-6) {
+          title = 'Caso crítico';
+          text = 'No topo, a força normal tende a zero. Em aritmética exata, a partícula completa o loop.';
+        } else if (q > 1) {
+          const thetaDetach = Math.acos(clamp((2 - 2 * q) / 3, -1, 1));
+          title = 'Perde contato';
+          text = `A força normal zera antes do topo, aproximadamente em θ = ${format(thetaDetach * 180 / Math.PI, 1)}°.`;
+        } else {
+          const thetaMax = Math.acos(clamp(1 - q, -1, 1));
+          title = 'Retorna pela pista';
+          text = `A energia cinética zera aproximadamente em θ = ${format(thetaMax * 180 / Math.PI, 1)}°.`;
+        }
+        el.predictionTitle.textContent = title;
+        el.predictionText.textContent = text;
+      }
+
+      function potentialScore() {
+        const q = sim.h / sim.R;
+        if (q < 2.5 - 1e-6) return 0;
+        return clamp(Math.round(2500 / q), 0, 1000);
+      }
+
+      function reset(startImmediately = false) {
+        sim.running = false;
+        sim.phase = 'ready';
+        sim.t = 0;
+        sim.s = 0;
+        sim.v = 0;
+        sim.theta = 0;
+        sim.vx = 0;
+        sim.vy = 0;
+        sim.normal = null;
+        sim.trail = [];
+        sim.completed = false;
+        sim.collisionArmed = false;
+        buildRamp();
+        const p = sampleRamp(0);
+        sim.x = p.x;
+        sim.y = p.y;
+        el.play.textContent = 'Iniciar';
+        el.message.textContent = 'Pressione Iniciar ou a barra de espaço';
+        prediction();
+        updateHud();
+        draw();
+        if (startImmediately) togglePlay();
+      }
+
+      function togglePlay() {
+        if (sim.phase === 'done') reset(false);
+        sim.running = !sim.running;
+        if (sim.running) {
+          if (sim.phase === 'ready') sim.phase = 'ramp';
+          el.play.textContent = 'Pausar';
+          el.message.textContent = 'Simulação em execução';
+          sim.lastTimestamp = performance.now();
+        } else {
+          el.play.textContent = sim.phase === 'ready' ? 'Iniciar' : 'Continuar';
+          el.message.textContent = 'Simulação pausada';
+        }
+      }
+
+      function enterLoop() {
+        sim.phase = 'loop';
+        sim.theta = 0;
+        sim.v = Math.sqrt(Math.max(0, 2 * G * sim.h));
+        sim.x = 0;
+        sim.y = 0;
+      }
+
+      function enterRampBack() {
+        sim.phase = 'rampBack';
+        sim.s = sim.rampLength;
+        sim.v = -Math.abs(sim.v);
+        const p = sampleRamp(sim.s);
+        sim.x = p.x;
+        sim.y = p.y;
+      }
+
+      function detach() {
+        sim.phase = 'projectile';
+        const tangentX = Math.cos(sim.theta);
+        const tangentY = Math.sin(sim.theta);
+        sim.vx = sim.v * tangentX;
+        sim.vy = sim.v * tangentY;
+        sim.normal = 0;
+        sim.collisionArmed = false;
+        el.message.textContent = 'Contato perdido: movimento balístico';
+      }
+
+      function finish(message) {
+        sim.running = false;
+        sim.phase = 'done';
+        el.play.textContent = 'Jogar novamente';
+        el.message.textContent = message;
+      }
+
+      function integrateRamp(dt, backward = false) {
+        const p = sampleRamp(sim.s);
+        const tangentialAcceleration = -G * p.ty;
+        sim.v += tangentialAcceleration * dt;
+        sim.s += sim.v * dt;
+
+        if (!backward && sim.s >= sim.rampLength) {
+          enterLoop();
+          return;
+        }
+
+        if (backward && sim.s <= 0) {
+          sim.s = 0;
+          sim.v = 0;
+          const start = sampleRamp(0);
+          sim.x = start.x;
+          sim.y = start.y;
+          finish('A partícula retornou ao ponto de partida');
+          return;
+        }
+
+        const next = sampleRamp(sim.s);
+        sim.x = next.x;
+        sim.y = next.y;
+      }
+
+      function integrateLoop(dt) {
+        const q = sim.h / sim.R;
+        const acceleration = -G * Math.sin(sim.theta);
+        sim.v += acceleration * dt;
+        sim.theta += (sim.v / sim.R) * dt;
+        sim.x = sim.R * Math.sin(sim.theta);
+        sim.y = sim.R * (1 - Math.cos(sim.theta));
+        sim.normal = MASS * (sim.v * sim.v / sim.R + G * Math.cos(sim.theta));
+
+        if (sim.theta <= 0 && sim.v < 0 && sim.t > 0.15) {
+          enterRampBack();
+          return;
+        }
+
+        if (q < 2.5 - 1e-7 && sim.normal <= 0 && sim.theta > 0.02) {
+          detach();
+          return;
+        }
+
+        if (sim.theta >= TAU) {
+          sim.theta = TAU;
+          sim.x = 0;
+          sim.y = 0;
+          sim.completed = true;
+          sim.phase = 'exit';
+          sim.normal = null;
+          el.message.textContent = 'Loop completo';
+        }
+      }
+
+      function integrateProjectile(dt) {
+        sim.x += sim.vx * dt;
+        sim.y += sim.vy * dt;
+        sim.vy -= G * dt;
+        sim.v = Math.hypot(sim.vx, sim.vy);
+
+        const distance = Math.hypot(sim.x, sim.y - sim.R);
+        if (distance < sim.R - 0.02) sim.collisionArmed = true;
+        if (sim.collisionArmed && distance >= sim.R) {
+          finish('A partícula reencontrou o trilho após perder contato');
+          return;
+        }
+        if (sim.y <= 0 && sim.vy < 0) {
+          sim.y = 0;
+          finish('A partícula atingiu o nível do solo');
+        }
+      }
+
+      function integrateExit(dt) {
+        sim.x += sim.v * dt;
+        sim.y = 0;
+        if (sim.x > Math.max(2.8 * sim.R, 4.2)) {
+          finish(`Loop concluído — pontuação ${potentialScore()}`);
+        }
+      }
+
+      function step(dt) {
+        sim.t += dt;
+        if (sim.phase === 'ramp') integrateRamp(dt, false);
+        else if (sim.phase === 'rampBack') integrateRamp(dt, true);
+        else if (sim.phase === 'loop') integrateLoop(dt);
+        else if (sim.phase === 'projectile') integrateProjectile(dt);
+        else if (sim.phase === 'exit') integrateExit(dt);
+
+        if (el.trail.checked && ['ramp', 'loop', 'projectile', 'exit', 'rampBack'].includes(sim.phase)) {
+          const last = sim.trail[sim.trail.length - 1];
+          if (!last || Math.hypot(sim.x - last.x, sim.y - last.y) > 0.035 * sim.R) {
+            sim.trail.push({ x: sim.x, y: sim.y, phase: sim.phase });
+            if (sim.trail.length > 430) sim.trail.shift();
+          }
+        }
+      }
+
+      function resizeCanvas() {
+        const rect = el.wrap.getBoundingClientRect();
+        const dpr = clamp(window.devicePixelRatio || 1, 1, 2);
+        el.canvas.width = Math.round(rect.width * dpr);
+        el.canvas.height = Math.round(rect.height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        sim.view = computeView(rect.width, rect.height);
+        draw();
+      }
+
+      function computeView(width, height) {
+        const rampStart = sim.ramp.length ? sim.ramp[0].x : -Math.max(3.2 * sim.R, 4.2);
+        const xMin = rampStart - 0.45 * sim.R;
+        const xMax = Math.max(3.3 * sim.R, 4.8);
+        const yMin = -0.32 * Math.max(sim.R, 1);
+        const yMax = Math.max(sim.h, 2 * sim.R) + 0.6 * Math.max(sim.R, 1);
+        const marginX = 48;
+        const marginY = 42;
+        const scale = Math.min(
+          (width - 2 * marginX) / Math.max(1, xMax - xMin),
+          (height - 2 * marginY) / Math.max(1, yMax - yMin)
+        );
+        const usedW = (xMax - xMin) * scale;
+        const usedH = (yMax - yMin) * scale;
+        const left = (width - usedW) / 2;
+        const top = (height - usedH) / 2;
+        return { width, height, xMin, xMax, yMin, yMax, scale, left, top };
+      }
+
+      function toScreen(x, y) {
+        const v = sim.view;
+        return {
+          x: v.left + (x - v.xMin) * v.scale,
+          y: v.top + (v.yMax - y) * v.scale
+        };
+      }
+
+      function drawGrid() {
+        if (!el.grid.checked) return;
+        const v = sim.view;
+        ctx.save();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(145, 175, 210, 0.10)';
+        ctx.fillStyle = 'rgba(170, 196, 225, 0.56)';
+        ctx.font = '11px system-ui, sans-serif';
+
+        const step = v.scale > 90 ? 0.5 : v.scale > 46 ? 1 : 2;
+        const xStart = Math.ceil(v.xMin / step) * step;
+        const yStart = Math.ceil(Math.max(0, v.yMin) / step) * step;
+
+        for (let x = xStart; x <= v.xMax; x += step) {
+          const a = toScreen(x, v.yMin);
+          const b = toScreen(x, v.yMax);
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+        for (let y = yStart; y <= v.yMax; y += step) {
+          const a = toScreen(v.xMin, y);
+          const b = toScreen(v.xMax, y);
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+          if (y > 0) ctx.fillText(`${format(y, step < 1 ? 1 : 0)} m`, a.x + 5, a.y - 4);
+        }
+        ctx.restore();
+      }
+
+      function drawGround() {
+        const a = toScreen(sim.view.xMin, 0);
+        const b = toScreen(sim.view.xMax, 0);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(213, 229, 247, 0.30)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawTrack() {
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        const drawPath = (stroke, width) => {
+          ctx.strokeStyle = stroke;
+          ctx.lineWidth = width;
+          ctx.beginPath();
+          sim.ramp.forEach((p, i) => {
+            const s = toScreen(p.x, p.y);
+            if (i === 0) ctx.moveTo(s.x, s.y);
+            else ctx.lineTo(s.x, s.y);
+          });
+          const c = toScreen(0, sim.R);
+          ctx.moveTo(...Object.values(toScreen(0, 0)));
+          ctx.arc(c.x, c.y, sim.R * sim.view.scale, Math.PI / 2, Math.PI / 2 + TAU, false);
+          const exitStart = toScreen(0, 0);
+          const exitEnd = toScreen(Math.max(3.1 * sim.R, 4.5), 0);
+          ctx.moveTo(exitStart.x, exitStart.y);
+          ctx.lineTo(exitEnd.x, exitEnd.y);
+          ctx.stroke();
+        };
+
+        drawPath('rgba(0, 0, 0, 0.48)', 12);
+        drawPath('#dce9f7', 5);
+        drawPath('rgba(85, 200, 255, 0.55)', 1.5);
+        ctx.restore();
+      }
+
+      function drawMeasurements() {
+        if (!el.grid.checked) return;
+        const start = sim.ramp[0];
+        const hBottom = toScreen(start.x - 0.23 * sim.R, 0);
+        const hTop = toScreen(start.x - 0.23 * sim.R, sim.h);
+        const center = toScreen(0, sim.R);
+        const right = toScreen(sim.R, sim.R);
+
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 202, 106, 0.9)';
+        ctx.fillStyle = 'rgba(255, 226, 169, 0.96)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(hBottom.x, hBottom.y);
+        ctx.lineTo(hTop.x, hTop.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(center.x, center.y);
+        ctx.lineTo(right.x, right.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font = '600 13px system-ui, sans-serif';
+        ctx.fillText(`h = ${format(sim.h)} m`, hTop.x + 7, (hTop.y + hBottom.y) / 2);
+        ctx.fillText(`R = ${format(sim.R)} m`, (center.x + right.x) / 2 - 20, center.y - 8);
+        ctx.restore();
+      }
+
+      function drawTrail() {
+        if (!el.trail.checked || sim.trail.length < 2) return;
+        ctx.save();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(85, 200, 255, 0.42)';
+        ctx.beginPath();
+        sim.trail.forEach((p, i) => {
+          const s = toScreen(p.x, p.y);
+          if (i === 0) ctx.moveTo(s.x, s.y);
+          else ctx.lineTo(s.x, s.y);
+        });
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function arrow(x1, y1, x2, y2, color, label) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const len = Math.hypot(dx, dy);
+        if (len < 1) return;
+        const ux = dx / len;
+        const uy = dy / len;
+        const head = 8;
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - head * ux + 0.55 * head * uy, y2 - head * uy - 0.55 * head * ux);
+        ctx.lineTo(x2 - head * ux - 0.55 * head * uy, y2 - head * uy + 0.55 * head * ux);
+        ctx.closePath();
+        ctx.fill();
+        if (label) {
+          ctx.font = '700 12px system-ui, sans-serif';
+          ctx.fillText(label, x2 + 5, y2 - 5);
+        }
+        ctx.restore();
+      }
+
+      function currentVelocityVector() {
+        if (sim.phase === 'ramp' || sim.phase === 'rampBack' || sim.phase === 'ready') {
+          const p = sampleRamp(sim.s);
+          return { x: p.tx * sim.v, y: p.ty * sim.v };
+        }
+        if (sim.phase === 'loop') {
+          return { x: Math.cos(sim.theta) * sim.v, y: Math.sin(sim.theta) * sim.v };
+        }
+        if (sim.phase === 'projectile') return { x: sim.vx, y: sim.vy };
+        if (sim.phase === 'exit') return { x: sim.v, y: 0 };
+        return { x: 0, y: 0 };
+      }
+
+      function drawVectors(center, radiusPx) {
+        if (!el.vectors.checked || sim.phase === 'ready' || sim.phase === 'done') return;
+        const vel = currentVelocityVector();
+        const velMagnitude = Math.hypot(vel.x, vel.y);
+        if (velMagnitude > 0.02) {
+          const scale = clamp(5.5 * sim.view.scale / Math.max(20, sim.view.scale), 4.2, 6.5);
+          const length = clamp(velMagnitude * scale, 20, 92);
+          arrow(center.x, center.y, center.x + vel.x / velMagnitude * length, center.y - vel.y / velMagnitude * length, '#55c8ff', 'v');
+        }
+
+        const gravityLength = 45;
+        arrow(center.x, center.y, center.x, center.y + gravityLength, '#ffca6a', 'mg');
+
+        if (sim.phase === 'loop' && sim.normal !== null && sim.normal > 0) {
+          const cx = toScreen(0, sim.R);
+          const dx = cx.x - center.x;
+          const dy = cx.y - center.y;
+          const d = Math.max(1, Math.hypot(dx, dy));
+          const length = clamp(sim.normal / (MASS * G) * 17, 12, 80);
+          arrow(center.x, center.y, center.x + dx / d * length, center.y + dy / d * length, '#7cf1c8', 'N');
+        }
+      }
+
+      function drawParticle() {
+        const p = toScreen(sim.x, sim.y);
+        const radius = clamp(0.12 * sim.R * sim.view.scale, 8, 15);
+        ctx.save();
+        ctx.shadowColor = 'rgba(85, 200, 255, 0.62)';
+        ctx.shadowBlur = 18;
+        const gradient = ctx.createRadialGradient(p.x - radius * 0.3, p.y - radius * 0.35, 1, p.x, p.y, radius);
+        gradient.addColorStop(0, '#f4fbff');
+        gradient.addColorStop(0.34, '#7dd8ff');
+        gradient.addColorStop(1, '#1876a8');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, TAU);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.restore();
+        drawVectors(p, radius);
+      }
+
+      function drawThresholdMarker() {
+        const top = toScreen(0, 2 * sim.R);
+        ctx.save();
+        ctx.fillStyle = 'rgba(124, 241, 200, 0.95)';
+        ctx.font = '600 12px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('topo', top.x, top.y - 12);
+        ctx.restore();
+      }
+
+      function draw() {
+        if (!sim.view) return;
+        const { width, height } = sim.view;
+        ctx.clearRect(0, 0, width, height);
+
+        const bg = ctx.createLinearGradient(0, 0, 0, height);
+        bg.addColorStop(0, '#07111f');
+        bg.addColorStop(1, '#0b1729');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, width, height);
+
+        drawGrid();
+        drawGround();
+        drawTrail();
+        drawTrack();
+        drawMeasurements();
+        drawThresholdMarker();
+        drawParticle();
+      }
+
+      function currentEnergy() {
+        const total = MASS * G * sim.h;
+        const potential = MASS * G * Math.max(0, sim.y);
+        let kinetic = 0.5 * MASS * sim.v * sim.v;
+        if (sim.phase === 'projectile') kinetic = 0.5 * MASS * (sim.vx * sim.vx + sim.vy * sim.vy);
+        if (sim.phase === 'ready') kinetic = 0;
+        return { total, potential, kinetic };
+      }
+
+      function phaseLabel() {
+        const labels = {
+          ready: 'Pronto',
+          ramp: 'Descendo',
+          rampBack: 'Retornando',
+          loop: 'No loop',
+          projectile: 'Voo livre',
+          exit: 'Loop completo',
+          done: sim.completed ? 'Concluído' : 'Encerrado'
+        };
+        return labels[sim.phase] || sim.phase;
+      }
+
+      function updateHud() {
+        el.hValue.textContent = `${format(sim.h)} m`;
+        el.rValue.textContent = `${format(sim.R)} m`;
+        el.timeValue.textContent = `${format(sim.timeScale)}×`;
+        el.state.textContent = phaseLabel();
+        el.ratio.textContent = format(sim.h / sim.R, 3);
+        el.speed.textContent = `${format(Math.abs(sim.v))} m/s`;
+        el.normal.textContent = sim.normal === null ? '—' : `${format(Math.max(0, sim.normal / MASS))} m/s²`;
+        el.score.textContent = String(potentialScore());
+
+        const e = currentEnergy();
+        const total = Math.max(e.total, 1e-9);
+        const kPct = clamp(100 * e.kinetic / total, 0, 120);
+        const uPct = clamp(100 * e.potential / total, 0, 120);
+        const mPct = clamp(100 * (e.kinetic + e.potential) / total, 0, 120);
+        el.kineticBar.style.width = `${Math.min(100, kPct)}%`;
+        el.potentialBar.style.width = `${Math.min(100, uPct)}%`;
+        el.totalBar.style.width = `${Math.min(100, mPct)}%`;
+        el.kineticText.textContent = `${Math.round(kPct)}%`;
+        el.potentialText.textContent = `${Math.round(uPct)}%`;
+        el.totalText.textContent = `${Math.round(mPct)}%`;
+      }
+
+      function frame(timestamp) {
+        const elapsed = Math.min(0.05, Math.max(0, (timestamp - sim.lastTimestamp) / 1000));
+        sim.lastTimestamp = timestamp;
+
+        if (sim.running) {
+          sim.accumulated += elapsed * sim.timeScale;
+          const fixed = 1 / 240;
+          let steps = 0;
+          while (sim.accumulated >= fixed && steps < 80) {
+            step(fixed);
+            sim.accumulated -= fixed;
+            steps++;
+          }
+        }
+
+        updateHud();
+        draw();
+        requestAnimationFrame(frame);
+      }
+
+      function parametersChanged() {
+        sim.h = Number(el.h.value);
+        sim.R = Number(el.r.value);
+        sim.timeScale = Number(el.time.value);
+        reset(false);
+        resizeCanvas();
+      }
+
+      el.h.addEventListener('input', parametersChanged);
+      el.r.addEventListener('input', parametersChanged);
+      el.time.addEventListener('input', () => {
+        sim.timeScale = Number(el.time.value);
+        el.timeValue.textContent = `${format(sim.timeScale)}×`;
+      });
+      el.play.addEventListener('click', togglePlay);
+      el.reset.addEventListener('click', () => reset(false));
+      el.critical.addEventListener('click', () => {
+        const critical = clamp(2.5 * Number(el.r.value), Number(el.h.min), Number(el.h.max));
+        el.h.value = critical.toFixed(2);
+        parametersChanged();
+      });
+      el.vectors.addEventListener('change', draw);
+      el.trail.addEventListener('change', draw);
+      el.grid.addEventListener('change', draw);
+
+      window.addEventListener('keydown', (event) => {
+        if (event.code === 'Space' && !['INPUT', 'BUTTON'].includes(document.activeElement.tagName)) {
+          event.preventDefault();
+          togglePlay();
+        } else if (event.key.toLowerCase() === 'r' && !['INPUT'].includes(document.activeElement.tagName)) {
+          reset(false);
+        }
+      });
+
+      const observer = new ResizeObserver(resizeCanvas);
+      observer.observe(el.wrap);
+
+      reset(false);
+      resizeCanvas();
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>
