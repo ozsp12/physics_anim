@@ -1,0 +1,160 @@
+name: Apply PhysLab integration refactor
+
+on:
+  push:
+    branches:
+      - agent/complete-physlab-refactor
+
+permissions:
+  contents: write
+
+jobs:
+  refactor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v6
+        with:
+          ref: agent/complete-physlab-refactor
+
+      - name: Integrate tested physics core and consolidate Pages
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected one match, found {count}")
+              return text.replace(old, new, 1)
+
+          index_path = Path('rollercoster_loop/index.html')
+          text = index_path.read_text(encoding='utf-8')
+
+          text = replace_once(
+              text,
+              '  <script>\n    (() => {',
+              '  <script src="physics-model.js"></script>\n  <script>\n    (() => {',
+              'physics-model script include',
+          )
+
+          text = replace_once(
+              text,
+              '      const G = 9.81;\n      const MASS = 1;\n      const TAU = Math.PI * 2;',
+              '''      const {\n        G,\n        criticalHeight,\n        speedSquaredFromEnergy,\n        normalAccelerationFromState,\n        tangentialAcceleration,\n        shouldDetach\n      } = window.VerticalLoopPhysics;\n      const MASS = 1;\n      const TAU = Math.PI * 2;''',
+              'physics core imports',
+          )
+
+          text = replace_once(
+              text,
+              '        const hCritical = 2.5 * sim.R;',
+              '        const hCritical = criticalHeight(sim.R);',
+              'critical height prediction',
+          )
+
+          text = replace_once(
+              text,
+              '        sim.v = Math.sqrt(Math.max(0, 2 * G * sim.h));',
+              '        sim.v = Math.sqrt(Math.max(0, speedSquaredFromEnergy(sim.h, sim.R, 0, G)));',
+              'loop entry speed',
+          )
+
+          text = replace_once(
+              text,
+              '''      function integrateLoop(dt) {\n        const q = sim.h / sim.R;\n        const acceleration = -G * Math.sin(sim.theta);''',
+              '''      function integrateLoop(dt) {\n        const acceleration = tangentialAcceleration(sim.theta, G);''',
+              'loop acceleration',
+          )
+
+          text = replace_once(
+              text,
+              '        sim.normal = MASS * (sim.v * sim.v / sim.R + G * Math.cos(sim.theta));',
+              '        sim.normal = MASS * normalAccelerationFromState(sim.v, sim.R, sim.theta, G);',
+              'normal reaction',
+          )
+
+          text = replace_once(
+              text,
+              '''        if (q < 2.5 - 1e-7 && sim.normal <= 0 && sim.theta > 0.02) {\n          detach();\n          return;\n        }''',
+              '''        if (shouldDetach({\n          theta: sim.theta,\n          speed: sim.v,\n          normalAcceleration: sim.normal / MASS\n        })) {\n          detach();\n          return;\n        }''',
+              'detachment event',
+          )
+
+          text = replace_once(
+              text,
+              '        const critical = clamp(2.5 * Number(el.r.value), Number(el.h.min), Number(el.h.max));',
+              '        const critical = clamp(criticalHeight(Number(el.r.value)), Number(el.h.min), Number(el.h.max));',
+              'critical-height control',
+          )
+
+          index_path.write_text(text, encoding='utf-8')
+
+          integration_test = r'''\n'use strict';\n\nconst assert = require('node:assert/strict');\nconst fs = require('node:fs');\nconst path = require('node:path');\nconst test = require('node:test');\n\nconst indexPath = path.join(__dirname, '..', 'index.html');\nconst html = fs.readFileSync(indexPath, 'utf8');\n\ntest('browser application loads the tested physics core', () => {\n  assert.match(html, /<script src="physics-model\\.js"><\\/script>/);\n  assert.match(html, /window\\.VerticalLoopPhysics/);\n});\n\ntest('loop integration delegates physical calculations to physics-model.js', () => {\n  assert.match(html, /tangentialAcceleration\\(sim\\.theta, G\\)/);\n  assert.match(html, /normalAccelerationFromState\\(sim\\.v, sim\\.R, sim\\.theta, G\\)/);\n  assert.match(html, /shouldDetach\\(\\{/);\n  assert.doesNotMatch(html, /q < 2\\.5 - 1e-7 && sim\\.normal <= 0/);\n});\n\ntest('critical-height control uses the shared analytical model', () => {\n  assert.match(html, /criticalHeight\\(Number\\(el\\.r\\.value\\)\\)/);\n});\n'''.lstrip()
+          Path('rollercoster_loop/tests/test_integration.js').write_text(integration_test, encoding='utf-8')
+
+          ci = '''name: Validate physics simulations\n\non:\n  push:\n    branches:\n      - main\n  pull_request:\n  workflow_dispatch:\n\npermissions:\n  contents: read\n\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Check out repository\n        uses: actions/checkout@v6\n\n      - name: Run JavaScript physics and integration tests\n        run: node --test rollercoster_loop/tests/test_model.js rollercoster_loop/tests/test_integration.js\n\n      - name: Run independent Python analytical tests\n        run: python -m unittest discover -s rollercoster_loop/tests -p 'test_model.py' -v\n'''
+          Path('.github/workflows/ci.yml').write_text(ci, encoding='utf-8')
+
+          Path('.github/workflows/pages.yml').unlink(missing_ok=True)
+          Path('.github/workflows/_apply_refactor.yml').unlink(missing_ok=True)
+          Path('docs/index.html').unlink(missing_ok=True)
+          try:
+              Path('docs').rmdir()
+          except OSError:
+              pass
+
+          readme_path = Path('README.md')
+          readme = readme_path.read_text(encoding='utf-8')
+          readme = readme.replace(
+              '| [`rollercoster_loop/`](rollercoster_loop/) | Interactive vertical-loop simulation with adjustable release height and loop radius | [Open the simulation](https://ozsp12.github.io/physics_anim/) |',
+              '| [`rollercoster_loop/`](rollercoster_loop/) | Interactive vertical-loop simulation with adjustable release height and loop radius | [Open the simulation](https://ozsp12.github.io/physics_anim/rollercoster_loop/) |'
+          )
+          old_deploy = '''## Deployment\n\nThe workflow in [`.github/workflows/pages.yml`](.github/workflows/pages.yml) publishes the contents of `rollercoster_loop/` to GitHub Pages whenever the `main` branch is updated. The deployed site is expected at:\n\n```text\nhttps://ozsp12.github.io/physics_anim/\n```\n\nThe helper scripts [`publish_repository.ps1`](publish_repository.ps1) and [`publish_repository.sh`](publish_repository.sh) create the public GitHub repository, push the project, enable Pages with the workflow publishing source, and dispatch the deployment workflow. They require an authenticated GitHub CLI session.\n'''
+          new_deploy = '''## Deployment\n\nGitHub Pages publishes the `main` branch from the repository root. This preserves stable project URLs such as:\n\n```text\nhttps://ozsp12.github.io/physics_anim/rollercoster_loop/\n```\n\nThe root [`index.html`](index.html) redirects to the current demonstration for convenience. The workflow in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) validates the JavaScript and Python physics tests but does not deploy the site; publication is handled only by the branch-based GitHub Pages source.\n\nThe helper scripts [`publish_repository.ps1`](publish_repository.ps1) and [`publish_repository.sh`](publish_repository.sh) create or update the public repository and configure Pages to publish `main:/`. They require an authenticated GitHub CLI session.\n'''
+          if old_deploy not in readme:
+              raise SystemExit('README deployment section did not match expected content')
+          readme_path.write_text(readme.replace(old_deploy, new_deploy), encoding='utf-8')
+
+          publishing = '''# Publishing\n\nThe repository is published at:\n\n```text\nhttps://ozsp12.github.io/physics_anim/\n```\n\nGitHub Pages uses the `main` branch and repository root (`/`) as the single publication source. Individual simulations therefore retain stable paths, currently:\n\n```text\nhttps://ozsp12.github.io/physics_anim/rollercoster_loop/\n```\n\nThe workflow `.github/workflows/ci.yml` performs validation only; it does not publish Pages.\n\n## Automated repository setup\n\nThe helper scripts require Git and GitHub CLI with an authenticated session:\n\n```bash\ngh auth login\n```\n\n### Windows PowerShell\n\n```powershell\nSet-ExecutionPolicy -Scope Process Bypass\n.\\publish_repository.ps1\n```\n\n### Linux or macOS\n\n```bash\n./publish_repository.sh\n```\n\nThe scripts create or update the repository, push `main`, and configure GitHub Pages to publish the root of `main`.\n\n## Manual fallback\n\nUnder **Settings → Pages → Build and deployment**, select **Deploy from a branch**, choose branch **main**, and choose folder **/(root)**.\n'''
+          Path('PUBLISHING.md').write_text(publishing, encoding='utf-8')
+
+          shell_path = Path('publish_repository.sh')
+          shell = shell_path.read_text(encoding='utf-8')
+          shell = shell.replace(
+              'git add README.md CONTENTS.md CONTRIBUTING.md REFERENCES.md CITATION.cff .gitignore .github rollercoster_loop publish_repository.ps1 publish_repository.sh',
+              'git add README.md CONTENTS.md CONTRIBUTING.md PUBLISHING.md REFERENCES.md CITATION.cff .gitignore .nojekyll index.html .github rollercoster_loop publish_repository.ps1 publish_repository.sh'
+          )
+          old_shell_pages = '''if ! gh api --method POST "repos/$OWNER/$REPOSITORY/pages" -f build_type=workflow >/dev/null 2>&1; then\n  gh api --method PUT "repos/$OWNER/$REPOSITORY/pages" -f build_type=workflow >/dev/null\nfi\n\ngh workflow run pages.yml --repo "$OWNER/$REPOSITORY" --ref main\n'''
+          new_shell_pages = '''if ! gh api --method POST "repos/$OWNER/$REPOSITORY/pages" -F "source[branch]=main" -F "source[path]=/" >/dev/null 2>&1; then\n  gh api --method PUT "repos/$OWNER/$REPOSITORY/pages" -F "source[branch]=main" -F "source[path]=/" >/dev/null\nfi\n'''
+          if old_shell_pages not in shell:
+              raise SystemExit('publish_repository.sh Pages block did not match expected content')
+          shell_path.write_text(shell.replace(old_shell_pages, new_shell_pages), encoding='utf-8')
+
+          ps_path = Path('publish_repository.ps1')
+          ps = ps_path.read_text(encoding='utf-8')
+          ps = ps.replace(
+              'git add README.md CONTENTS.md CONTRIBUTING.md REFERENCES.md CITATION.cff .gitignore .github rollercoster_loop publish_repository.ps1 publish_repository.sh',
+              'git add README.md CONTENTS.md CONTRIBUTING.md PUBLISHING.md REFERENCES.md CITATION.cff .gitignore .nojekyll index.html .github rollercoster_loop publish_repository.ps1 publish_repository.sh'
+          )
+          old_ps_pages = '''gh api --method POST "repos/$Owner/$Repository/pages" -f build_type=workflow 2>$null | Out-Null\nif ($LASTEXITCODE -ne 0) {\n    gh api --method PUT "repos/$Owner/$Repository/pages" -f build_type=workflow | Out-Null\n}\n\ngh workflow run pages.yml --repo "$Owner/$Repository" --ref main\n'''
+          new_ps_pages = '''gh api --method POST "repos/$Owner/$Repository/pages" -F "source[branch]=main" -F "source[path]=/" 2>$null | Out-Null\nif ($LASTEXITCODE -ne 0) {\n    gh api --method PUT "repos/$Owner/$Repository/pages" -F "source[branch]=main" -F "source[path]=/" | Out-Null\n}\n'''
+          if old_ps_pages not in ps:
+              raise SystemExit('publish_repository.ps1 Pages block did not match expected content')
+          ps = ps.replace(old_ps_pages, new_ps_pages)
+          ps = ps.replace('Write-Host "The Pages workflow may require one initial run from the Actions tab."\n', '')
+          ps_path.write_text(ps, encoding='utf-8')
+          PY
+
+      - name: Run validation
+        run: |
+          node --test rollercoster_loop/tests/test_model.js rollercoster_loop/tests/test_integration.js
+          python -m unittest discover -s rollercoster_loop/tests -p 'test_model.py' -v
+
+      - name: Commit refactor
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Complete physics integration and consolidate Pages deployment"
+          git push origin HEAD:agent/complete-physlab-refactor
