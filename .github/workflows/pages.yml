@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -16,7 +17,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Run JavaScript physics tests
+        run: node --test rollercoster_loop/tests/test_model.js
+
+      - name: Run independent Python analytical tests
+        run: python -m unittest discover -s rollercoster_loop/tests -p 'test_model.py' -v
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -35,6 +49,7 @@ jobs:
           path: ./rollercoster_loop
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:
