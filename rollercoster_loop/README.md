@@ -28,13 +28,13 @@ and therefore
 v^2(\theta)=2g\left[h-R(1-\cos\theta)\right].
 \]
 
-The inward radial equation is
+Taking the inward radial direction toward the loop center, the radial force balance is
 
 \[
-N+mg\cos\theta=\frac{mv^2}{R},
+N-mg\cos\theta=\frac{mv^2}{R},
 \]
 
-when the inward direction is taken toward the loop center. Equivalently, with the sign convention implemented by the interface,
+and therefore
 
 \[
 \frac{N}{m}=\frac{v^2}{R}+g\cos\theta.
@@ -86,7 +86,7 @@ The ramp is represented by a sampled cubic Bézier curve used only to connect th
 
 independent of the screen refresh rate. After contact is lost, the position and velocity are advanced under uniform gravity. Track re-entry and ground contact are handled by geometric event tests.
 
-The analytical expressions shown in the prediction panel are not inferred from the numerical trajectory; they are calculated directly from \(h/R\). This distinction permits the numerical output to be checked against the exact threshold.
+The analytical expressions shown in the prediction panel are not inferred from the numerical trajectory; they are calculated directly from \(h/R\). The reusable analytical and event-level physics functions are defined in [`physics-model.js`](physics-model.js), which is exercised directly by the JavaScript regression tests.
 
 ## Interface
 
@@ -116,10 +116,11 @@ No external package or network connection is required.
 From the repository root:
 
 ```bash
-python -m unittest discover -s rollercoster_loop/tests -v
+node --test rollercoster_loop/tests/test_model.js
+python -m unittest discover -s rollercoster_loop/tests -p 'test_model.py' -v
 ```
 
-The tests verify the critical-height relation, turning-point condition, detachment condition, and representative regime classifications.
+The JavaScript suite tests the reusable physics implementation used for browser-side refactoring, including the critical height, contact condition, boundary regimes, and numerical contact tolerances. The Python suite remains as an independent analytical reference.
 
 ## Limitations
 
