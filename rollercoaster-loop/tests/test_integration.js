@@ -54,6 +54,13 @@ test('canonical route is English-only and exposes accessible status text', () =>
   assert.match(ui, /const locale = 'en-US'/);
 });
 
+test('critical-case scientific text is consistent in static HTML and runtime UI', () => {
+  const expected = 'At the top, the normal force is zero in the ideal model. In exact arithmetic, the particle completes the loop.';
+  assert.match(canonicalHtml, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(ui, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.doesNotMatch(canonicalHtml, /normal force tends to zero/);
+});
+
 test('legacy simulation URLs remain mapped to the canonical route', () => {
   assert.match(notFoundHtml, /\/physics_anim\/rollercoster_loop/);
   assert.match(notFoundHtml, /\/physics_anim\/vertical-loop/);
