@@ -22,3 +22,11 @@ jobs:
 
       - name: Run independent Python analytical tests
         run: python -m unittest discover -s rollercoster_loop/tests -p 'test_model.py' -v
+
+      - name: Install browser test tooling
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Run browser smoke tests
+        run: npm run test:browser
