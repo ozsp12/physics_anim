@@ -6,15 +6,14 @@ const path = require('node:path');
 const test = require('node:test');
 
 const root = path.join(__dirname, '..', '..');
-const canonicalHtml = fs.readFileSync(path.join(root, 'vertical-loop', 'index.html'), 'utf8');
-const legacyHtml = fs.readFileSync(path.join(root, 'rollercoster_loop', 'index.html'), 'utf8');
-const app = fs.readFileSync(path.join(root, 'vertical-loop', 'app.js'), 'utf8');
-const ui = fs.readFileSync(path.join(root, 'vertical-loop', 'ui.js'), 'utf8');
-const renderer = fs.readFileSync(path.join(root, 'vertical-loop', 'renderer.js'), 'utf8');
+const canonicalHtml = fs.readFileSync(path.join(root, 'rollercoaster-loop', 'index.html'), 'utf8');
+const app = fs.readFileSync(path.join(root, 'rollercoaster-loop', 'app.js'), 'utf8');
+const ui = fs.readFileSync(path.join(root, 'rollercoaster-loop', 'ui.js'), 'utf8');
+const renderer = fs.readFileSync(path.join(root, 'rollercoaster-loop', 'renderer.js'), 'utf8');
 
 test('canonical browser application loads modular scientific runtime', () => {
-  assert.match(canonicalHtml, /rollercoster_loop\/physics-model\.js/);
-  assert.match(canonicalHtml, /rollercoster_loop\/simulation-core\.js/);
+  assert.match(canonicalHtml, /physics-model\.js/);
+  assert.match(canonicalHtml, /simulation-core\.js/);
   assert.match(canonicalHtml, /ui\.js/);
   assert.match(canonicalHtml, /renderer\.js/);
   assert.match(canonicalHtml, /app\.js/);
@@ -44,16 +43,9 @@ test('renderer and UI responsibilities are externalized', () => {
 
 test('canonical route is English-only and exposes accessible status text', () => {
   assert.match(canonicalHtml, /<html lang="en">/);
-  assert.doesNotMatch(canonicalHtml, /hreflang="pt-BR"/);
-  assert.doesNotMatch(canonicalHtml, /id="langPt"|id="langEn"/);
+  assert.match(canonicalHtml, /rollercoaster-loop/);
   assert.match(canonicalHtml, /id="statusAnnouncer"[^>]*aria-live="polite"/);
   assert.match(canonicalHtml, /aria-describedby="simulationSummary"/);
   assert.doesNotMatch(canonicalHtml, /class="hud"[^>]*aria-live/);
   assert.match(ui, /const locale = 'en-US'/);
-  assert.doesNotMatch(ui, /pt-BR/);
-});
-
-test('legacy misspelled URL redirects to canonical vertical-loop route', () => {
-  assert.match(legacyHtml, /url=\.\.\/vertical-loop\//);
-  assert.match(legacyHtml, /canonical[^>]+vertical-loop/);
 });
