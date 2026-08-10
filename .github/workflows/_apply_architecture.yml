@@ -53,14 +53,6 @@ jobs:
           html = html.replace(old_loop, new_loop, 1)
           index_path.write_text(html, encoding='utf-8')
 
-          ci_path = Path('.github/workflows/pages.yml')
-          ci = ci_path.read_text(encoding='utf-8')
-          ci = ci.replace(
-              'node --test rollercoster_loop/tests/test_model.js rollercoster_loop/tests/test_integration.js',
-              'node --test rollercoster_loop/tests/test_model.js rollercoster_loop/tests/test_integration.js rollercoster_loop/tests/test_numerics.js'
-          )
-          ci_path.write_text(ci, encoding='utf-8')
-
           integration_path = Path('rollercoster_loop/tests/test_integration.js')
           integration = integration_path.read_text(encoding='utf-8')
           integration = integration.replace(
@@ -91,9 +83,8 @@ jobs:
 
       - name: Commit generated refactor
         run: |
-          rm .github/workflows/_apply_architecture.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Modularize simulation core and expand numerical validation"
+          git add README.md rollercoster_loop/index.html rollercoster_loop/styles.css rollercoster_loop/tests/test_integration.js
+          git commit -m "Modularize simulation presentation and runtime integration"
           git push origin HEAD:agent/physlab-architecture-tests
