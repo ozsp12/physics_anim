@@ -17,8 +17,8 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Run JavaScript physics and integration tests
-        run: node --test rollercoster_loop/tests/test_model.js rollercoster_loop/tests/test_integration.js
+      - name: Run JavaScript physics, integration, and numerical tests
+        run: node --test rollercoster_loop/tests/test_model.js rollercoster_loop/tests/test_integration.js rollercoster_loop/tests/test_numerics.js
 
       - name: Run independent Python analytical tests
         run: python -m unittest discover -s rollercoster_loop/tests -p 'test_model.py' -v
