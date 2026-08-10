@@ -10,7 +10,7 @@ The repository distinguishes physical models from their visual representations. 
 |---|---|---|
 | [`rollercoster_loop/`](rollercoster_loop/) | Interactive vertical-loop simulation with adjustable release height and loop radius | [Open the simulation](https://ozsp12.github.io/physics_anim/rollercoster_loop/) |
 
-See [`CONTENTS.md`](CONTENTS.md) for the project catalogue and [`REFERENCES.md`](REFERENCES.md) for the academic bibliography.
+See [`simulations.json`](simulations.json) for machine-readable simulation metadata, [`CONTENTS.md`](CONTENTS.md) for the human-readable catalogue, and [`REFERENCES.md`](REFERENCES.md) for the academic bibliography.
 
 ## Running locally
 

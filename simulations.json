@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "simulations": [
+    {
+      "id": "vertical-loop",
+      "title": {
+        "pt-BR": "Loop vertical: energia e contato",
+        "en": "Vertical loop: energy and contact"
+      },
+      "path": "rollercoster_loop/",
+      "aliases": ["vertical-loop/"],
+      "domain": "classical-mechanics",
+      "model": "frictionless-point-particle",
+      "parameters": ["h", "R"],
+      "languages": ["pt-BR"],
+      "status": "stable",
+      "entry_point": "rollercoster_loop/index.html",
+      "physics_module": "rollercoster_loop/physics-model.js",
+      "simulation_module": "rollercoster_loop/simulation-core.js"
+    }
+  ]
+}
