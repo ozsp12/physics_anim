@@ -12,18 +12,24 @@
   'use strict';
 
   const G = 9.81;
+  const CRITICAL_RATIO = 2.5;
+  const SIDE_LIMIT_RATIO = 1.0;
   const CONTACT_TOLERANCE = 1e-3 * G;
   const SPEED_TOLERANCE = 1e-6;
+  const CLASSIFICATION_TOLERANCE = 1e-9;
 
   function requirePositiveRadius(radius) {
-    if (!(radius > 0)) {
-      throw new RangeError('radius must be positive');
-    }
+    if (!(radius > 0)) throw new RangeError('radius must be positive');
+  }
+
+  function ratio(height, radius) {
+    requirePositiveRadius(radius);
+    return height / radius;
   }
 
   function criticalHeight(radius) {
     requirePositiveRadius(radius);
-    return 2.5 * radius;
+    return CRITICAL_RATIO * radius;
   }
 
   function loopHeight(radius, theta) {
@@ -45,14 +51,31 @@
     return -gravity * Math.sin(theta);
   }
 
-  function classify(height, radius, tolerance = 1e-12) {
-    requirePositiveRadius(radius);
-    const q = height / radius;
-    if (q < 1 - tolerance) return 'return';
-    if (Math.abs(q - 1) <= tolerance) return 'side_limit';
-    if (q < 2.5 - tolerance) return 'detach';
-    if (Math.abs(q - 2.5) <= tolerance) return 'critical';
+  function classify(height, radius, tolerance = CLASSIFICATION_TOLERANCE) {
+    const q = ratio(height, radius);
+    if (q < SIDE_LIMIT_RATIO - tolerance) return 'return';
+    if (Math.abs(q - SIDE_LIMIT_RATIO) <= tolerance) return 'side_limit';
+    if (q < CRITICAL_RATIO - tolerance) return 'detach';
+    if (Math.abs(q - CRITICAL_RATIO) <= tolerance) return 'critical';
     return 'complete';
+  }
+
+  function turningAngle(height, radius) {
+    const q = ratio(height, radius);
+    if (q < 0 || q > SIDE_LIMIT_RATIO) return null;
+    return Math.acos(Math.max(-1, Math.min(1, 1 - q)));
+  }
+
+  function detachmentAngle(height, radius) {
+    const q = ratio(height, radius);
+    if (!(q > SIDE_LIMIT_RATIO && q < CRITICAL_RATIO)) return null;
+    return Math.acos(Math.max(-1, Math.min(1, (2 - 2 * q) / 3)));
+  }
+
+  function score(height, radius) {
+    const regime = classify(height, radius);
+    if (!['critical', 'complete'].includes(regime)) return 0;
+    return Math.max(0, Math.min(1000, Math.round(1000 * CRITICAL_RATIO / ratio(height, radius))));
   }
 
   function shouldDetach({
@@ -70,14 +93,21 @@
 
   return Object.freeze({
     G,
+    CRITICAL_RATIO,
+    SIDE_LIMIT_RATIO,
     CONTACT_TOLERANCE,
     SPEED_TOLERANCE,
+    CLASSIFICATION_TOLERANCE,
+    ratio,
     criticalHeight,
     loopHeight,
     speedSquaredFromEnergy,
     normalAccelerationFromState,
     tangentialAcceleration,
     classify,
+    turningAngle,
+    detachmentAngle,
+    score,
     shouldDetach
   });
 });
