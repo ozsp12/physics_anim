@@ -1,0 +1,49 @@
+@import url('../rollercoster_loop/styles.css');
+
+.language-switch {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.language-switch a {
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+}
+
+.language-switch a[aria-current="page"] {
+  color: var(--text);
+  border-color: rgba(85, 200, 255, 0.62);
+  background: rgba(85, 200, 255, 0.10);
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.diagnostics {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.diagnostics summary {
+  font-size: 0.78rem;
+}
+
+@media (max-width: 600px) {
+  .language-switch { margin: 10px 0 0; }
+}
