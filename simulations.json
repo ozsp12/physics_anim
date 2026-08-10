@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "simulations": [
     {
       "id": "vertical-loop",
@@ -7,16 +7,25 @@
         "pt-BR": "Loop vertical: energia e contato",
         "en": "Vertical loop: energy and contact"
       },
-      "path": "rollercoster_loop/",
-      "aliases": ["vertical-loop/"],
+      "canonical_path": "vertical-loop/",
+      "legacy_paths": ["rollercoster_loop/"],
       "domain": "classical-mechanics",
       "model": "frictionless-point-particle",
       "parameters": ["h", "R"],
-      "languages": ["pt-BR"],
+      "languages": ["pt-BR", "en"],
       "status": "stable",
-      "entry_point": "rollercoster_loop/index.html",
+      "production_timestep_seconds": 0.004166666666666667,
+      "entry_point": "vertical-loop/index.html",
       "physics_module": "rollercoster_loop/physics-model.js",
-      "simulation_module": "rollercoster_loop/simulation-core.js"
+      "simulation_module": "rollercoster_loop/simulation-core.js",
+      "ui_module": "vertical-loop/ui.js",
+      "renderer_module": "vertical-loop/renderer.js",
+      "controller_module": "vertical-loop/app.js",
+      "tests": {
+        "analytical": "rollercoster_loop/tests/test_model.js",
+        "numerical": "rollercoster_loop/tests/test_numerics.js",
+        "browser": "rollercoster_loop/tests/browser/smoke.spec.js"
+      }
     }
   ]
 }
