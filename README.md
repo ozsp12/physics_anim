@@ -8,9 +8,9 @@ Physics Animations is an academic collection of interactive simulations for phys
 
 An interactive study of a frictionless point particle released from rest and moving through a vertical circular loop. The simulation explores conservation of mechanical energy, normal force, loss of contact, and the critical condition
 
-\[
+$$
 h_{\min}=\frac{5R}{2}.
-\]
+$$
 
 [Open the simulation](https://ozsp12.github.io/physics_anim/rollercoaster-loop/)
 
