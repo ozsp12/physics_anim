@@ -21,7 +21,7 @@
     predReturnText: angle => `Kinetic energy vanishes at approximately θ = ${angle}°.` ,
     predSideText: 'The particle reaches the side point with zero speed.',
     predDetachText: angle => `The normal force vanishes before the top, at approximately θ = ${angle}°.` ,
-    predCriticalText: 'At the top, the normal force tends to zero. In exact arithmetic, the particle completes the loop.',
+    predCriticalText: 'At the top, the normal force is zero in the ideal model. In exact arithmetic, the particle completes the loop.',
     predCompleteText: margin => `There is a positive contact margin at the top. The height exceeds the minimum by ${margin} m.`
   });
 

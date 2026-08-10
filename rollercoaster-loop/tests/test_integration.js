@@ -10,6 +10,8 @@ const canonicalHtml = fs.readFileSync(path.join(root, 'rollercoaster-loop', 'ind
 const app = fs.readFileSync(path.join(root, 'rollercoaster-loop', 'app.js'), 'utf8');
 const ui = fs.readFileSync(path.join(root, 'rollercoaster-loop', 'ui.js'), 'utf8');
 const renderer = fs.readFileSync(path.join(root, 'rollercoaster-loop', 'renderer.js'), 'utf8');
+const styles = fs.readFileSync(path.join(root, 'rollercoaster-loop', 'styles.css'), 'utf8');
+const notFoundHtml = fs.readFileSync(path.join(root, '404.html'), 'utf8');
 
 test('canonical browser application loads modular scientific runtime', () => {
   assert.match(canonicalHtml, /physics-model\.js/);
@@ -35,10 +37,12 @@ test('UI delegates regime classification and score to physics-model.js', () => {
   assert.doesNotMatch(app, /2\.5\s*-/);
 });
 
-test('renderer and UI responsibilities are externalized', () => {
+test('renderer and UI responsibilities are externalized with one stylesheet', () => {
   assert.match(renderer, /createRenderer/);
   assert.match(canonicalHtml, /<link rel="stylesheet" href="styles\.css">/);
   assert.doesNotMatch(canonicalHtml, /<style>/);
+  assert.doesNotMatch(styles, /@import\s+url\(['"]base\.css['"]\)/);
+  assert.equal(fs.existsSync(path.join(root, 'rollercoaster-loop', 'base.css')), false);
 });
 
 test('canonical route is English-only and exposes accessible status text', () => {
@@ -48,4 +52,15 @@ test('canonical route is English-only and exposes accessible status text', () =>
   assert.match(canonicalHtml, /aria-describedby="simulationSummary"/);
   assert.doesNotMatch(canonicalHtml, /class="hud"[^>]*aria-live/);
   assert.match(ui, /const locale = 'en-US'/);
+});
+
+test('legacy simulation URLs remain mapped to the canonical route', () => {
+  assert.match(notFoundHtml, /\/physics_anim\/rollercoster_loop/);
+  assert.match(notFoundHtml, /\/physics_anim\/vertical-loop/);
+  assert.match(notFoundHtml, /\/physics_anim\/rollercoaster-loop\//);
+  assert.match(notFoundHtml, /window\.location\.replace/);
+});
+
+test('unused global simulation manifest is absent', () => {
+  assert.equal(fs.existsSync(path.join(root, 'simulations.json')), false);
 });
