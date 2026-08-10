@@ -17,9 +17,9 @@ if [[ ! -d .git ]]; then
   git init -b main
 fi
 
-git add README.md CONTENTS.md CONTRIBUTING.md REFERENCES.md CITATION.cff .gitignore .github rollercoster_loop publish_repository.ps1 publish_repository.sh
+git add README.md CONTENTS.md CONTRIBUTING.md PUBLISHING.md REFERENCES.md CITATION.cff .gitignore .nojekyll index.html .github rollercoster_loop publish_repository.ps1 publish_repository.sh
 if [[ -n "$(git status --porcelain)" ]]; then
-  git commit -m "Add interactive vertical-loop simulation"
+  git commit -m "Update physics animations repository"
 fi
 
 if gh repo view "$OWNER/$REPOSITORY" >/dev/null 2>&1; then
@@ -37,11 +37,9 @@ else
     --push
 fi
 
-if ! gh api --method POST "repos/$OWNER/$REPOSITORY/pages" -f build_type=workflow >/dev/null 2>&1; then
-  gh api --method PUT "repos/$OWNER/$REPOSITORY/pages" -f build_type=workflow >/dev/null
+if ! gh api --method POST "repos/$OWNER/$REPOSITORY/pages" -F "source[branch]=main" -F "source[path]=/" >/dev/null 2>&1; then
+  gh api --method PUT "repos/$OWNER/$REPOSITORY/pages" -F "source[branch]=main" -F "source[path]=/" >/dev/null
 fi
-
-gh workflow run pages.yml --repo "$OWNER/$REPOSITORY" --ref main
 
 echo "Repository: https://github.com/$OWNER/$REPOSITORY"
 echo "Pages: $HOMEPAGE"

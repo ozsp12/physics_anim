@@ -19,11 +19,11 @@ if (-not (Test-Path ".git")) {
     git init -b main
 }
 
-git add README.md CONTENTS.md CONTRIBUTING.md REFERENCES.md CITATION.cff .gitignore .github rollercoster_loop publish_repository.ps1 publish_repository.sh
+git add README.md CONTENTS.md CONTRIBUTING.md PUBLISHING.md REFERENCES.md CITATION.cff .gitignore .nojekyll index.html .github rollercoster_loop publish_repository.ps1 publish_repository.sh
 if (-not (git status --porcelain)) {
     Write-Host "No uncommitted changes were found."
 } else {
-    git commit -m "Add interactive vertical-loop simulation"
+    git commit -m "Update physics animations repository"
 }
 
 $existing = gh repo view "$Owner/$Repository" 2>$null
@@ -37,13 +37,10 @@ if ($LASTEXITCODE -ne 0) {
     git push -u origin main
 }
 
-gh api --method POST "repos/$Owner/$Repository/pages" -f build_type=workflow 2>$null | Out-Null
+gh api --method POST "repos/$Owner/$Repository/pages" -F "source[branch]=main" -F "source[path]=/" 2>$null | Out-Null
 if ($LASTEXITCODE -ne 0) {
-    gh api --method PUT "repos/$Owner/$Repository/pages" -f build_type=workflow | Out-Null
+    gh api --method PUT "repos/$Owner/$Repository/pages" -F "source[branch]=main" -F "source[path]=/" | Out-Null
 }
-
-gh workflow run pages.yml --repo "$Owner/$Repository" --ref main
 
 Write-Host "Repository: https://github.com/$Owner/$Repository"
 Write-Host "Pages: $Homepage"
-Write-Host "The Pages workflow may require one initial run from the Actions tab."

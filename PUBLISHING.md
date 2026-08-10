@@ -1,24 +1,28 @@
 # Publishing
 
-The repository is configured for deployment to:
+The repository is published at:
 
 ```text
 https://ozsp12.github.io/physics_anim/
 ```
 
-The static site itself is the directory `rollercoster_loop/`. The GitHub Actions workflow uploads that directory as the Pages artifact, so the live site opens the simulation directly rather than showing the repository documentation.
+GitHub Pages uses the `main` branch and repository root (`/`) as the single publication source. Individual simulations therefore retain stable paths, currently:
 
-## Automated publication
+```text
+https://ozsp12.github.io/physics_anim/rollercoster_loop/
+```
 
-The scripts require Git and GitHub CLI with an authenticated session:
+The workflow `.github/workflows/pages.yml` performs validation only; it does not deploy GitHub Pages.
+
+## Automated repository setup
+
+The helper scripts require Git and GitHub CLI with an authenticated session:
 
 ```bash
 gh auth login
 ```
 
 ### Windows PowerShell
-
-From the extracted repository directory:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
@@ -31,15 +35,8 @@ Set-ExecutionPolicy -Scope Process Bypass
 ./publish_repository.sh
 ```
 
-The scripts perform the following operations:
-
-1. initialize the local `main` branch when necessary;
-2. commit the complete repository structure;
-3. create the public repository `ozsp12/physics_anim` when it does not exist;
-4. push the `main` branch;
-5. configure GitHub Pages to use a custom workflow;
-6. dispatch `.github/workflows/pages.yml`.
+The scripts create or update the repository, push `main`, and configure GitHub Pages to publish the root of `main`.
 
 ## Manual fallback
 
-Create a public repository named `physics_anim`, upload the project contents to its `main` branch, and select **GitHub Actions** under **Settings → Pages → Build and deployment**. Run the workflow named **Deploy interactive simulation to GitHub Pages** if the initial push did not trigger it.
+Under **Settings → Pages → Build and deployment**, select **Deploy from a branch**, choose branch **main**, and choose folder **/(root)**.

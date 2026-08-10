@@ -458,11 +458,12 @@
     <p class="footer-note">Atalhos: espaço inicia ou pausa; tecla R reinicia. O corpo é tratado como partícula deslizante, não como esfera rolante. Projeto: <a href="https://github.com/ozsp12/physics_anim" style="color: var(--accent);">Physics Animations</a>, Dr. Osvaldo L. Santos-Pereira.</p>
   </main>
 
+  <script src="physics-model.js"></script>
   <script>
     (() => {
       'use strict';
 
-      const G = 9.81;
+      const { G, criticalHeight, speedSquaredFromEnergy, normalAccelerationFromState, tangentialAcceleration, shouldDetach } = window.VerticalLoopPhysics;
       const MASS = 1;
       const TAU = Math.PI * 2;
 
@@ -594,7 +595,7 @@
 
       function prediction() {
         const q = sim.h / sim.R;
-        const hCritical = 2.5 * sim.R;
+        const hCritical = criticalHeight(sim.R);
         let title;
         let text;
         if (q > 2.5 + 1e-6) {
@@ -664,7 +665,7 @@
       function enterLoop() {
         sim.phase = 'loop';
         sim.theta = 0;
-        sim.v = Math.sqrt(Math.max(0, 2 * G * sim.h));
+        sim.v = Math.sqrt(Math.max(0, speedSquaredFromEnergy(sim.h, sim.R, 0, G)));
         sim.x = 0;
         sim.y = 0;
       }
@@ -723,20 +724,23 @@
       }
 
       function integrateLoop(dt) {
-        const q = sim.h / sim.R;
-        const acceleration = -G * Math.sin(sim.theta);
+        const acceleration = tangentialAcceleration(sim.theta, G);
         sim.v += acceleration * dt;
         sim.theta += (sim.v / sim.R) * dt;
         sim.x = sim.R * Math.sin(sim.theta);
         sim.y = sim.R * (1 - Math.cos(sim.theta));
-        sim.normal = MASS * (sim.v * sim.v / sim.R + G * Math.cos(sim.theta));
+        sim.normal = MASS * normalAccelerationFromState(sim.v, sim.R, sim.theta, G);
 
         if (sim.theta <= 0 && sim.v < 0 && sim.t > 0.15) {
           enterRampBack();
           return;
         }
 
-        if (q < 2.5 - 1e-7 && sim.normal <= 0 && sim.theta > 0.02) {
+        if (shouldDetach({
+          theta: sim.theta,
+          speed: sim.v,
+          normalAcceleration: sim.normal / MASS
+        })) {
           detach();
           return;
         }
@@ -1150,7 +1154,7 @@
       el.play.addEventListener('click', togglePlay);
       el.reset.addEventListener('click', () => reset(false));
       el.critical.addEventListener('click', () => {
-        const critical = clamp(2.5 * Number(el.r.value), Number(el.h.min), Number(el.h.max));
+        const critical = clamp(criticalHeight(Number(el.r.value)), Number(el.h.min), Number(el.h.max));
         el.h.value = critical.toFixed(2);
         parametersChanged();
       });

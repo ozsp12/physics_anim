@@ -8,7 +8,7 @@ The repository distinguishes physical models from their visual representations. 
 
 | Project | Description | Live artifact |
 |---|---|---|
-| [`rollercoster_loop/`](rollercoster_loop/) | Interactive vertical-loop simulation with adjustable release height and loop radius | [Open the simulation](https://ozsp12.github.io/physics_anim/) |
+| [`rollercoster_loop/`](rollercoster_loop/) | Interactive vertical-loop simulation with adjustable release height and loop radius | [Open the simulation](https://ozsp12.github.io/physics_anim/rollercoster_loop/) |
 
 See [`CONTENTS.md`](CONTENTS.md) for the project catalogue and [`REFERENCES.md`](REFERENCES.md) for the academic bibliography.
 
@@ -24,13 +24,15 @@ Then open `http://localhost:8000` in a browser. No package installation, compila
 
 ## Deployment
 
-The workflow in [`.github/workflows/pages.yml`](.github/workflows/pages.yml) publishes the contents of `rollercoster_loop/` to GitHub Pages whenever the `main` branch is updated. The deployed site is expected at:
+GitHub Pages publishes the `main` branch from the repository root. This keeps each project at a stable path, currently:
 
 ```text
-https://ozsp12.github.io/physics_anim/
+https://ozsp12.github.io/physics_anim/rollercoster_loop/
 ```
 
-The helper scripts [`publish_repository.ps1`](publish_repository.ps1) and [`publish_repository.sh`](publish_repository.sh) create the public GitHub repository, push the project, enable Pages with the workflow publishing source, and dispatch the deployment workflow. They require an authenticated GitHub CLI session.
+The root [`index.html`](index.html) redirects to the current demonstration for convenience. The workflow in [`.github/workflows/pages.yml`](.github/workflows/pages.yml) performs JavaScript and Python validation only and does not publish Pages. Publication is handled exclusively by the branch-based GitHub Pages source `main:/`.
+
+The helper scripts [`publish_repository.ps1`](publish_repository.ps1) and [`publish_repository.sh`](publish_repository.sh) create or update the public repository and configure Pages to publish the root of `main`. They require an authenticated GitHub CLI session.
 
 ## Academic use
 
