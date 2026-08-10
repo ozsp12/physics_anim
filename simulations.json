@@ -4,7 +4,6 @@
     {
       "id": "vertical-loop",
       "title": {
-        "pt-BR": "Loop vertical: energia e contato",
         "en": "Vertical loop: energy and contact"
       },
       "canonical_path": "vertical-loop/",
@@ -12,7 +11,7 @@
       "domain": "classical-mechanics",
       "model": "frictionless-point-particle",
       "parameters": ["h", "R"],
-      "languages": ["pt-BR", "en"],
+      "languages": ["en"],
       "status": "stable",
       "production_timestep_seconds": 0.004166666666666667,
       "entry_point": "vertical-loop/index.html",
