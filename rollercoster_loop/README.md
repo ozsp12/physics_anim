@@ -1,131 +1,109 @@
-# Roller-Coaster Vertical Loop
+# Vertical-Loop Scientific Core
 
-This project is an interactive browser simulation of a point mass moving along a smooth ramp and a vertical circular loop. The user controls the release height \(h\) and loop radius \(R\), observes the resulting motion, and compares the numerical animation with the analytical threshold for maintaining contact throughout the loop.
+This directory retains the historical `rollercoster_loop` path for backward compatibility and hosts the shared analytical and numerical scientific modules for the canonical application at [`../vertical-loop/`](../vertical-loop/).
 
-[Open the published simulation](https://ozsp12.github.io/physics_anim/)
+[Open the canonical published simulation](https://ozsp12.github.io/physics_anim/vertical-loop/)
 
 ![Preview of the vertical-loop simulation](assets/preview.png)
 
 ## Physical model
 
-The body is treated as a particle of mass \(m\). It starts from rest at height \(h\), measured from the lowest point of the loop. The track is frictionless, gravitational acceleration is constant, air resistance is neglected, and the body does not roll. The loop is a circle of radius \(R\).
+The body is a frictionless point particle of mass \(m\), released from rest at height \(h\) above the lowest point of a circular loop of radius \(R\). Gravity is constant and air resistance and rolling motion are neglected.
 
-Let \(\theta\) be measured from the lowest point of the loop. The vertical coordinate is
-
-\[
-y(\theta)=R(1-\cos\theta).
-\]
-
-Conservation of mechanical energy gives
+With \(\theta\) measured from the lowest point,
 
 \[
-mgh=\frac{1}{2}mv^2+mgR(1-\cos\theta),
+y(\theta)=R(1-\cos\theta),
 \]
 
-and therefore
+and conservation of mechanical energy gives
 
 \[
 v^2(\theta)=2g\left[h-R(1-\cos\theta)\right].
 \]
 
-Taking the inward radial direction toward the loop center, the radial force balance is
+Taking the inward radial direction as positive,
 
 \[
 N-mg\cos\theta=\frac{mv^2}{R},
 \]
 
-and therefore
+so
 
 \[
 \frac{N}{m}=\frac{v^2}{R}+g\cos\theta.
 \]
 
-At the top, \(\theta=\pi\), the limiting case for contact is \(N=0\), so
-
-\[
-v_{\mathrm{top}}^2=gR.
-\]
-
-Energy conservation between the release point and the top gives
-
-\[
-v_{\mathrm{top}}^2=2g(h-2R).
-\]
-
-Combining these equations yields the minimum release height
+At the critical top state, \(N=0\) and \(v_{\mathrm{top}}^2=gR\), which yields
 
 \[
 \boxed{h_{\min}=\frac{5R}{2}}.
 \]
 
-## Regimes
+## Analytical regimes
 
 Writing \(q=h/R\):
 
 | Range | Predicted behavior |
 |---|---|
-| \(q<1\) | The particle reaches a turning point while the normal reaction remains nonnegative, then returns. |
+| \(q<1\) | The particle reaches a turning point and returns. |
 | \(q=1\) | The particle reaches the side point with zero speed and zero normal reaction. |
-| \(1<q<5/2\) | The normal reaction becomes zero before the top; the particle leaves the track and follows a ballistic trajectory. |
-| \(q=5/2\) | Critical completion: the normal reaction is zero at the top. |
-| \(q>5/2\) | The particle completes the loop with a positive normal reaction at the top. |
+| \(1<q<5/2\) | The normal reaction becomes zero before the top and the particle enters free flight. |
+| \(q=5/2\) | Critical completion with zero normal reaction at the top. |
+| \(q>5/2\) | The particle completes the loop with positive normal reaction at the top. |
 
-For \(1<q<5/2\), the analytical detachment angle satisfies
+For \(1<q<5/2\),
 
 \[
-\cos\theta_{\mathrm{d}}=\frac{2-2q}{3}.
+\cos\theta_{\mathrm d}=\frac{2-2q}{3}.
 \]
+
+These boundaries, turning/detachment angles, and scoring rules are centralized in [`physics-model.js`](physics-model.js).
 
 ## Numerical implementation
 
-The ramp is represented by a sampled cubic Bézier curve used only to connect the release point smoothly to the loop entrance. Motion along the ramp and loop is integrated with a fixed-step semi-implicit Euler method. The browser animation uses a physics step of
+[`simulation-core.js`](simulation-core.js) defines the production timestep
 
 \[
-\Delta t=\frac{1}{240}\ \mathrm{s},
+\Delta t=\frac{1}{240}\,\mathrm{s}.
 \]
 
-independent of the screen refresh rate. After contact is lost, the position and velocity are advanced under uniform gravity. Track re-entry and ground contact are handled by geometric event tests.
+The sampled cubic Bézier ramp and the circular-loop dynamics are integrated numerically using the same production timestep. The velocity obtained at the end of the ramp is carried directly into the loop; the browser application does not replace it with an analytically reconstructed speed.
 
-The analytical expressions shown in the prediction panel are not inferred from the numerical trajectory; they are calculated directly from \(h/R\). The reusable analytical and event-level physics functions are defined in [`physics-model.js`](physics-model.js), which is exercised directly by the JavaScript regression tests.
+The numerical suite checks energy drift at the production timestep, convergence under timestep refinement, the \(q=2.49,2.50,2.51\) boundary cases, and ramp-to-loop continuity.
 
-## Interface
+## Application architecture
 
-The application provides:
+The user-facing application is now located in [`../vertical-loop/`](../vertical-loop/):
 
-- sliders for \(h\), \(R\), and simulation speed;
-- automatic classification of the expected regime;
-- real-time speed, normal force per unit mass, and \(h/R\);
-- kinetic, potential, and total-energy indicators;
-- velocity, weight, and normal-force vectors;
-- optional grid, dimensions, and trajectory trace;
-- a control that sets the critical height \(h=5R/2\);
-- keyboard shortcuts: Space to play or pause, and `R` to reset.
-
-## Running locally
-
-Open [`index.html`](index.html) directly, or serve the directory:
-
-```bash
-python -m http.server 8000 --directory rollercoster_loop
+```text
+vertical-loop/index.html     semantic application shell
+vertical-loop/app.js         controller and simulation state
+vertical-loop/renderer.js    Canvas rendering
+vertical-loop/ui.js          PT-BR/EN localization and accessibility
+vertical-loop/styles.css     presentation
 ```
 
-No external package or network connection is required.
+This historical directory remains because published URLs may already point to `/rollercoster_loop/`. Its `index.html` therefore redirects to `/vertical-loop/` rather than serving a second copy of the application.
 
 ## Validation
 
 From the repository root:
 
 ```bash
-node --test rollercoster_loop/tests/test_model.js
+node --test rollercoster_loop/tests/test_model.js rollercoster_loop/tests/test_integration.js rollercoster_loop/tests/test_numerics.js
 python -m unittest discover -s rollercoster_loop/tests -p 'test_model.py' -v
+npm install
+npx playwright install chromium
+npm run test:browser
 ```
 
-The JavaScript suite tests the reusable physics implementation used for browser-side refactoring, including the critical height, contact condition, boundary regimes, and numerical contact tolerances. The Python suite remains as an independent analytical reference.
+The suites cover the reusable analytical model, production numerical behavior, independent Python reference calculations, application architecture, localization, redirects, accessibility state text, controls, and runtime JavaScript errors in a real Chromium browser.
 
 ## Limitations
 
-The model describes a sliding point mass, not a rolling sphere, car with finite wheelbase, flexible track, motorized vehicle, or real roller coaster. Rotational kinetic energy, friction, aerodynamic drag, structural deformation, passenger constraints, and safety engineering are excluded. The collision tests after detachment are illustrative and should not be used for engineering analysis.
+The model is intended for conceptual and computational-physics education. It excludes rolling inertia, friction, aerodynamic drag, structural deformation, finite vehicle geometry, passenger constraints, and engineering safety analysis. Post-detachment collision handling remains illustrative rather than an engineering contact solver.
 
 ## References
 
-See the repository-level [`REFERENCES.md`](../REFERENCES.md).
+See [`../REFERENCES.md`](../REFERENCES.md).

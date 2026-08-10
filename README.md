@@ -1,58 +1,93 @@
 # Physics Animations
 
-Physics is often taught through static diagrams even when the underlying subject is motion. This repository collects browser-based animations and interactive simulations designed to make the governing assumptions, equations, parameters, and numerical procedures visible. Each project is treated as an independent academic unit that can be read, executed, cited, and extended without requiring a proprietary platform.
-
-The repository distinguishes physical models from their visual representations. An animation is not evidence that a model is correct; it is a computational rendering of stated assumptions. Each project therefore documents its idealizations, equations of motion, numerical method, validity domain, and known limitations. The current implementation uses standards-based HTML, CSS, JavaScript, and Canvas so that the published artifact remains inspectable and reproducible in an ordinary web browser.
+Physics Animations is a collection of browser-based scientific simulations designed to expose assumptions, equations, numerical procedures, and validity limits rather than treating animation as evidence of physical correctness. The implementation uses standards-based HTML, CSS, JavaScript, Canvas, and automated analytical, numerical, and browser validation.
 
 ## Repository map
 
 | Project | Description | Live artifact |
 |---|---|---|
-| [`rollercoster_loop/`](rollercoster_loop/) | Interactive vertical-loop simulation with adjustable release height and loop radius | [Open the simulation](https://ozsp12.github.io/physics_anim/rollercoster_loop/) |
+| [`vertical-loop/`](vertical-loop/) | Bilingual interactive vertical-loop simulation with adjustable release height and loop radius | [Canonical simulation](https://ozsp12.github.io/physics_anim/vertical-loop/) |
+| [`rollercoster_loop/`](rollercoster_loop/) | Legacy path retained for backward compatibility | Redirects to the canonical simulation |
 
 See [`simulations.json`](simulations.json) for machine-readable simulation metadata, [`CONTENTS.md`](CONTENTS.md) for the human-readable catalogue, and [`REFERENCES.md`](REFERENCES.md) for the academic bibliography.
 
-## Running locally
+## Vertical-loop architecture
 
-The first project is a standalone static application. It may be opened directly as a file or served locally:
+The vertical-loop project separates scientific and presentation responsibilities:
 
-```bash
-python -m http.server 8000 --directory rollercoster_loop
+```text
+rollercoster_loop/physics-model.js      analytical physics
+rollercoster_loop/simulation-core.js    numerical integration and production timestep
+vertical-loop/app.js                    simulation controller and state transitions
+vertical-loop/renderer.js               Canvas rendering
+vertical-loop/ui.js                     PT-BR/EN text and accessibility
+vertical-loop/styles.css                presentation
+rollercoster_loop/tests/                analytical, numerical, integration, and browser tests
 ```
 
-Then open `http://localhost:8000` in a browser. No package installation, compilation, or external JavaScript dependency is required.
+The production timestep is `1/240 s`. The same numerical ramp state is carried continuously into the loop; the browser no longer resets the loop-entry speed from the analytical energy expression. Analytical regime classification, detachment/turning angles, the critical ratio, and scoring are centralized in `physics-model.js`.
+
+## Running locally
+
+Serve the repository root so that the canonical application can load its shared scientific modules:
+
+```bash
+python -m http.server 8000
+```
+
+Then open:
+
+```text
+http://localhost:8000/vertical-loop/
+http://localhost:8000/vertical-loop/?lang=en
+```
+
+## Validation
+
+JavaScript analytical, integration, and numerical tests:
+
+```bash
+node --test rollercoster_loop/tests/test_model.js rollercoster_loop/tests/test_integration.js rollercoster_loop/tests/test_numerics.js
+```
+
+Independent Python analytical reference tests:
+
+```bash
+python -m unittest discover -s rollercoster_loop/tests -p 'test_model.py' -v
+```
+
+Real-browser smoke tests use Playwright:
+
+```bash
+npm install
+npx playwright install chromium
+npm run test:browser
+```
+
+The browser suite verifies canonical loading, PT/EN localization, the critical-height control, the legacy redirect, accessible status text, and absence of runtime JavaScript errors.
 
 ## Deployment
 
-GitHub Pages publishes the `main` branch from the repository root. This keeps each project at a stable path, currently:
+GitHub Pages publishes the repository root from `main:/`. The CI workflow validates the simulation but does not deploy Pages. The canonical public route is:
 
 ```text
-https://ozsp12.github.io/physics_anim/rollercoster_loop/
+https://ozsp12.github.io/physics_anim/vertical-loop/
 ```
 
-The root [`index.html`](index.html) redirects to the current demonstration for convenience. The workflow in [`.github/workflows/pages.yml`](.github/workflows/pages.yml) performs JavaScript and Python validation only and does not publish Pages. Publication is handled exclusively by the branch-based GitHub Pages source `main:/`.
-
-The helper scripts [`publish_repository.ps1`](publish_repository.ps1) and [`publish_repository.sh`](publish_repository.sh) create or update the public repository and configure Pages to publish the root of `main`. They require an authenticated GitHub CLI session.
+The historical `/rollercoster_loop/` route is intentionally preserved as a redirect so existing links remain valid.
 
 ## Academic use
 
-Each simulation should provide:
-
-- a precise statement of the physical system and coordinate conventions;
-- the analytical equations used by the interface;
-- the numerical integration procedure, including the time step;
-- a distinction between exact predictions and discretization-dependent output;
-- references to standard textbooks or primary literature;
-- a standalone entry point and a representative preview image.
+Each simulation should provide a precise physical model, coordinate conventions, analytical equations, numerical integration method and timestep, exact-versus-discrete distinctions, references, a stable entry point, accessibility text, and automated scientific tests.
 
 ## Limitations
 
-These applications prioritize conceptual exposition and interactive exploration. They are not substitutes for experimental data, validated engineering software, or high-precision numerical solvers. Browser rendering, finite time steps, collision heuristics, and simplified geometries may introduce small deviations from ideal analytical results.
+These applications prioritize conceptual exposition and interactive exploration. They are not substitutes for experimental data, validated engineering software, or high-precision numerical solvers. Finite timesteps, collision heuristics, and simplified geometries remain explicit model limitations.
 
 ## Author
 
-**Dr. Osvaldo L. Santos-Pereira** — [Academic webpage](https://ozsp12.github.io/) · [Lattes](http://lattes.cnpq.br/6730251976463283) · [ORCID](https://orcid.org/0000-0003-2231-517X) · [Google Scholar](https://scholar.google.com/citations?user=HIZp0X8AAAAJ&hl=en) · [ResearchGate](https://www.researchgate.net/profile/Osvaldo-Santos-Pereira) · [GitHub](https://github.com/ozsp12) · [LinkedIn](https://www.linkedin.com/in/ozsp12) · [Substack](https://substack.com/@olsp1982) · [Medium](https://medium.com/@ozsp12) · [YouTube](https://www.youtube.com/@ozlsp12) · [X](https://x.com/ozsp12)
+**Dr. Osvaldo L. Santos-Pereira** — [Academic webpage](https://ozsp12.github.io/) · [Lattes](http://lattes.cnpq.br/6730251976463283) · [ORCID](https://orcid.org/0000-0003-2231-517X) · [Google Scholar](https://scholar.google.com/citations?user=HIZp0X8AAAAJ&hl=en) · [GitHub](https://github.com/ozsp12)
 
 ## Repository policy
 
-Project directories should remain stable after publication so that external links continue to work. No reuse license is asserted by this repository unless a license file is added explicitly by the owner.
+Published URLs remain stable through redirects when canonical paths change. No reuse license is asserted unless a license file is explicitly added by the owner.

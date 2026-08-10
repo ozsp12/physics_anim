@@ -1,14 +1,123 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="0; url=../rollercoster_loop/">
-  <link rel="canonical" href="https://ozsp12.github.io/physics_anim/rollercoster_loop/">
-  <title>Vertical Loop Simulation</title>
-  <script>window.location.replace('../rollercoster_loop/');</script>
+  <meta name="description" content="Interactive vertical-loop physics simulation for energy, normal force, and contact conditions.">
+  <meta name="author" content="Dr. Osvaldo L. Santos-Pereira">
+  <link rel="canonical" href="https://ozsp12.github.io/physics_anim/vertical-loop/">
+  <link rel="alternate" hreflang="pt-BR" href="https://ozsp12.github.io/physics_anim/vertical-loop/?lang=pt-BR">
+  <link rel="alternate" hreflang="en" href="https://ozsp12.github.io/physics_anim/vertical-loop/?lang=en">
+  <link rel="icon" href="../rollercoster_loop/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <title>Loop Vertical — Simulação Interativa</title>
 </head>
 <body>
-  <p>Redirecting to the <a href="../rollercoster_loop/">vertical-loop simulation</a>.</p>
+  <div id="statusAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  <p id="simulationSummary" class="sr-only"></p>
+
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <h1 id="pageHeading">Loop vertical: desafio de energia e contato</h1>
+        <p id="pageSubtitle" class="subtitle">Ajuste a altura inicial h e o raio R. Tente completar o loop usando a menor altura possível.</p>
+      </div>
+      <div id="challengeChip" class="challenge-chip">Meta teórica: h = 2,5R</div>
+      <nav class="language-switch" aria-label="Language">
+        <a id="langPt" href="?lang=pt-BR">PT</a>
+        <a id="langEn" href="?lang=en">EN</a>
+      </nav>
+    </header>
+
+    <section class="layout">
+      <aside class="panel controls" aria-label="Simulation controls">
+        <h2 id="parametersTitle" class="section-title">Parâmetros</h2>
+
+        <div class="control">
+          <div class="control-head">
+            <label id="heightLabel" for="heightRange">Altura inicial h</label>
+            <output class="value" id="heightValue" for="heightRange">5,00 m</output>
+          </div>
+          <input id="heightRange" type="range" min="0.50" max="8.00" step="0.05" value="5.00">
+          <div class="range-scale"><span>0,50 m</span><span>8,00 m</span></div>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label id="radiusLabel" for="radiusRange">Raio do loop R</label>
+            <output class="value" id="radiusValue" for="radiusRange">2,00 m</output>
+          </div>
+          <input id="radiusRange" type="range" min="0.40" max="2.50" step="0.05" value="2.00">
+          <div class="range-scale"><span>0,40 m</span><span>2,50 m</span></div>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label id="timeLabel" for="timeRange">Velocidade da simulação</label>
+            <output class="value" id="timeValue" for="timeRange">1,00×</output>
+          </div>
+          <input id="timeRange" type="range" min="0.25" max="2.00" step="0.05" value="1.00">
+        </div>
+
+        <div class="button-grid">
+          <button class="primary" id="playButton" type="button">Iniciar</button>
+          <button id="resetButton" type="button">Reiniciar</button>
+          <button class="wide" id="criticalButton" type="button">Definir h crítico = 2,5R</button>
+        </div>
+
+        <div class="checks">
+          <label class="check-row"><input id="vectorsCheck" type="checkbox" checked><span id="vectorsLabel">Mostrar vetores de força e velocidade</span></label>
+          <label class="check-row"><input id="trailCheck" type="checkbox" checked><span id="trailLabel">Mostrar rastro</span></label>
+          <label class="check-row"><input id="gridCheck" type="checkbox" checked><span id="gridLabel">Mostrar grade e medidas</span></label>
+        </div>
+
+        <h2 id="predictionHeading" class="section-title">Previsão</h2>
+        <div class="prediction">
+          <strong id="predictionTitle">Caso crítico</strong>
+          <p id="predictionText">No topo, a força normal tende a zero.</p>
+        </div>
+
+        <details class="diagnostics">
+          <summary>Diagnostics</summary>
+          <p>Raw N/m: <strong id="rawNormalMetric">—</strong></p>
+          <p>Production Δt: <strong>1/240 s</strong></p>
+        </details>
+      </aside>
+
+      <section class="panel stage" aria-label="Vertical loop simulation">
+        <div class="hud">
+          <div class="metric"><span id="stateLabel">Estado</span><strong id="stateMetric">Pronto</strong></div>
+          <div class="metric"><span>h/R</span><strong id="ratioMetric">2,500</strong></div>
+          <div class="metric"><span id="speedLabel">Velocidade</span><strong id="speedMetric">0,00 m/s</strong></div>
+          <div class="metric"><span>N/m</span><strong id="normalMetric">—</strong></div>
+          <div class="metric"><span id="scoreLabel">Pontuação</span><strong id="scoreMetric">1000</strong></div>
+        </div>
+
+        <div class="canvas-wrap" id="canvasWrap">
+          <canvas id="simCanvas" aria-label="Animated vertical-loop physics simulation" aria-describedby="simulationSummary"></canvas>
+          <div class="canvas-message" id="canvasMessage">Pressione Iniciar ou a barra de espaço</div>
+        </div>
+
+        <div class="energy" aria-label="Mechanical energy distribution">
+          <div class="energy-item kinetic"><span><b id="kineticLabel">Energia cinética</b><b id="kineticText">0%</b></span><div class="bar"><i id="kineticBar"></i></div></div>
+          <div class="energy-item potential"><span><b id="potentialLabel">Energia potencial</b><b id="potentialText">100%</b></span><div class="bar"><i id="potentialBar"></i></div></div>
+          <div class="energy-item total"><span><b id="totalLabel">Energia mecânica</b><b id="totalText">100%</b></span><div class="bar"><i id="totalBar"></i></div></div>
+        </div>
+      </section>
+    </section>
+
+    <details>
+      <summary id="modelSummary">Modelo físico utilizado</summary>
+      <p id="modelText">A partícula parte do repouso e não há atrito.</p>
+    </details>
+
+    <p class="footer-note"><span id="footerText">Atalhos: espaço inicia ou pausa; tecla R reinicia.</span> Projeto: <a href="https://github.com/ozsp12/physics_anim" style="color: var(--accent);">Physics Animations</a>, Dr. Osvaldo L. Santos-Pereira.</p>
+  </main>
+
+  <script src="../rollercoster_loop/physics-model.js"></script>
+  <script src="../rollercoster_loop/simulation-core.js"></script>
+  <script src="ui.js"></script>
+  <script src="renderer.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
