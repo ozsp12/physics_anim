@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Physics Animations — Page not found</title>
+  <script>
+    (function () {
+      const path = window.location.pathname.replace(/\/+$/, '');
+      const legacyPaths = new Set([
+        '/physics_anim/rollercoster_loop',
+        '/physics_anim/vertical-loop'
+      ]);
+      if (legacyPaths.has(path)) {
+        window.location.replace('/physics_anim/rollercoaster-loop/' + window.location.search + window.location.hash);
+      }
+    })();
+  </script>
+</head>
+<body>
+  <h1>404</h1>
+  <p>Page not found. Open the <a href="/physics_anim/rollercoaster-loop/">vertical roller-coaster loop simulation</a>.</p>
+</body>
+</html>
