@@ -2,28 +2,25 @@
   "schema_version": 2,
   "simulations": [
     {
-      "id": "vertical-loop",
-      "title": {
-        "en": "Vertical loop: energy and contact"
-      },
-      "canonical_path": "vertical-loop/",
-      "legacy_paths": ["rollercoster_loop/"],
+      "id": "rollercoaster-loop",
+      "title": { "en": "Vertical roller-coaster loop: energy and contact" },
+      "canonical_path": "rollercoaster-loop/",
       "domain": "classical-mechanics",
       "model": "frictionless-point-particle",
       "parameters": ["h", "R"],
       "languages": ["en"],
       "status": "stable",
       "production_timestep_seconds": 0.004166666666666667,
-      "entry_point": "vertical-loop/index.html",
-      "physics_module": "rollercoster_loop/physics-model.js",
-      "simulation_module": "rollercoster_loop/simulation-core.js",
-      "ui_module": "vertical-loop/ui.js",
-      "renderer_module": "vertical-loop/renderer.js",
-      "controller_module": "vertical-loop/app.js",
+      "entry_point": "rollercoaster-loop/index.html",
+      "physics_module": "rollercoaster-loop/physics-model.js",
+      "simulation_module": "rollercoaster-loop/simulation-core.js",
+      "ui_module": "rollercoaster-loop/ui.js",
+      "renderer_module": "rollercoaster-loop/renderer.js",
+      "controller_module": "rollercoaster-loop/app.js",
       "tests": {
-        "analytical": "rollercoster_loop/tests/test_model.js",
-        "numerical": "rollercoster_loop/tests/test_numerics.js",
-        "browser": "rollercoster_loop/tests/browser/smoke.spec.js"
+        "analytical": "rollercoaster-loop/tests/test_model.js",
+        "numerical": "rollercoaster-loop/tests/test_numerics.js",
+        "browser": "rollercoaster-loop/tests/browser/smoke.spec.js"
       }
     }
   ]

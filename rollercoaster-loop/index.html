@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interactive vertical roller-coaster loop simulation for energy, normal force, and contact conditions.">
+  <meta name="author" content="Dr. Osvaldo L. Santos-Pereira">
+  <link rel="canonical" href="https://ozsp12.github.io/physics_anim/rollercoaster-loop/">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <title>Vertical Roller-Coaster Loop — Interactive Simulation</title>
+</head>
+<body>
+  <div id="statusAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  <p id="simulationSummary" class="sr-only"></p>
+
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <h1 id="pageHeading">Vertical loop: energy and contact challenge</h1>
+        <p id="pageSubtitle" class="subtitle">Adjust the release height h and loop radius R. Try to complete the loop with the smallest possible height.</p>
+      </div>
+      <div id="challengeChip" class="challenge-chip">Theoretical target: h = 2.5R</div>
+    </header>
+
+    <section class="layout">
+      <aside class="panel controls" aria-label="Simulation controls">
+        <h2 id="parametersTitle" class="section-title">Parameters</h2>
+        <div class="control"><div class="control-head"><label id="heightLabel" for="heightRange">Release height h</label><output class="value" id="heightValue" for="heightRange">5.00 m</output></div><input id="heightRange" type="range" min="0.50" max="8.00" step="0.05" value="5.00"><div class="range-scale"><span>0.50 m</span><span>8.00 m</span></div></div>
+        <div class="control"><div class="control-head"><label id="radiusLabel" for="radiusRange">Loop radius R</label><output class="value" id="radiusValue" for="radiusRange">2.00 m</output></div><input id="radiusRange" type="range" min="0.40" max="2.50" step="0.05" value="2.00"><div class="range-scale"><span>0.40 m</span><span>2.50 m</span></div></div>
+        <div class="control"><div class="control-head"><label id="timeLabel" for="timeRange">Simulation speed</label><output class="value" id="timeValue" for="timeRange">1.00×</output></div><input id="timeRange" type="range" min="0.25" max="2.00" step="0.05" value="1.00"></div>
+        <div class="button-grid"><button class="primary" id="playButton" type="button">Start</button><button id="resetButton" type="button">Reset</button><button class="wide" id="criticalButton" type="button">Set critical h = 2.5R</button></div>
+        <div class="checks"><label class="check-row"><input id="vectorsCheck" type="checkbox" checked><span id="vectorsLabel">Show force and velocity vectors</span></label><label class="check-row"><input id="trailCheck" type="checkbox" checked><span id="trailLabel">Show trail</span></label><label class="check-row"><input id="gridCheck" type="checkbox" checked><span id="gridLabel">Show grid and measurements</span></label></div>
+        <h2 id="predictionHeading" class="section-title">Prediction</h2>
+        <div class="prediction"><strong id="predictionTitle">Critical case</strong><p id="predictionText">At the top, the normal force tends to zero.</p></div>
+        <details class="diagnostics"><summary>Diagnostics</summary><p>Raw N/m: <strong id="rawNormalMetric">—</strong></p><p>Production Δt: <strong>1/240 s</strong></p></details>
+      </aside>
+
+      <section class="panel stage" aria-label="Vertical loop simulation">
+        <div class="hud"><div class="metric"><span id="stateLabel">State</span><strong id="stateMetric">Ready</strong></div><div class="metric"><span>h/R</span><strong id="ratioMetric">2.500</strong></div><div class="metric"><span id="speedLabel">Speed</span><strong id="speedMetric">0.00 m/s</strong></div><div class="metric"><span>N/m</span><strong id="normalMetric">—</strong></div><div class="metric"><span id="scoreLabel">Score</span><strong id="scoreMetric">1000</strong></div></div>
+        <div class="canvas-wrap" id="canvasWrap"><canvas id="simCanvas" aria-label="Animated vertical-loop physics simulation" aria-describedby="simulationSummary"></canvas><div class="canvas-message" id="canvasMessage">Press Start or the Space bar</div></div>
+        <div class="energy" aria-label="Mechanical energy distribution"><div class="energy-item kinetic"><span><b id="kineticLabel">Kinetic energy</b><b id="kineticText">0%</b></span><div class="bar"><i id="kineticBar"></i></div></div><div class="energy-item potential"><span><b id="potentialLabel">Potential energy</b><b id="potentialText">100%</b></span><div class="bar"><i id="potentialBar"></i></div></div><div class="energy-item total"><span><b id="totalLabel">Mechanical energy</b><b id="totalText">100%</b></span><div class="bar"><i id="totalBar"></i></div></div></div>
+      </section>
+    </section>
+
+    <details><summary id="modelSummary">Physical model</summary><p id="modelText">The particle starts from rest and friction is neglected. The ramp and loop are integrated with the same timestep. In the loop, v² = 2g[h − R(1 − cos θ)] and N/m = v²/R + g cos θ. The ideal threshold for completing the loop is h ≥ 5R/2.</p></details>
+    <p class="footer-note"><span id="footerText">Shortcuts: Space starts or pauses; R resets. The body is treated as a sliding point particle, not a rolling sphere.</span> Project: <a href="https://github.com/ozsp12/physics_anim" style="color: var(--accent);">Physics Animations</a>, Dr. Osvaldo L. Santos-Pereira.</p>
+  </main>
+
+  <script src="physics-model.js"></script>
+  <script src="simulation-core.js"></script>
+  <script src="ui.js"></script>
+  <script src="renderer.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
