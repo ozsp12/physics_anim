@@ -1,0 +1,99 @@
+name: Apply architecture refactor
+
+on:
+  push:
+    branches:
+      - agent/physlab-architecture-tests
+
+permissions:
+  contents: write
+
+jobs:
+  refactor:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: agent/physlab-architecture-tests
+
+      - name: Extract styles and integrate simulation core
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          index_path = Path('rollercoster_loop/index.html')
+          html = index_path.read_text(encoding='utf-8')
+
+          style_match = re.search(r'\n  <style>\n(.*?)\n  </style>', html, flags=re.S)
+          if not style_match:
+              raise SystemExit('inline style block not found')
+          styles = style_match.group(1).rstrip() + '\n'
+          Path('rollercoster_loop/styles.css').write_text(styles, encoding='utf-8')
+          html = html[:style_match.start()] + '\n  <link rel="stylesheet" href="styles.css">' + html[style_match.end():]
+
+          old_scripts = '  <script src="physics-model.js"></script>\n  <script>'
+          new_scripts = '  <script src="physics-model.js"></script>\n  <script src="simulation-core.js"></script>\n  <script>'
+          if html.count(old_scripts) != 1:
+              raise SystemExit('physics script anchor not found exactly once')
+          html = html.replace(old_scripts, new_scripts, 1)
+
+          old_import = '      const { G, criticalHeight, speedSquaredFromEnergy, normalAccelerationFromState, tangentialAcceleration, shouldDetach } = window.VerticalLoopPhysics;\n      const MASS = 1;'
+          new_import = '      const { G, criticalHeight, speedSquaredFromEnergy } = window.VerticalLoopPhysics;\n      const { stepLoopState } = window.VerticalLoopSimulation;\n      const MASS = 1;'
+          if html.count(old_import) != 1:
+              raise SystemExit('physics import anchor not found exactly once')
+          html = html.replace(old_import, new_import, 1)
+
+          old_loop = '''      function integrateLoop(dt) {\n        const acceleration = tangentialAcceleration(sim.theta, G);\n        sim.v += acceleration * dt;\n        sim.theta += (sim.v / sim.R) * dt;\n        sim.x = sim.R * Math.sin(sim.theta);\n        sim.y = sim.R * (1 - Math.cos(sim.theta));\n        sim.normal = MASS * normalAccelerationFromState(sim.v, sim.R, sim.theta, G);\n\n        if (sim.theta <= 0 && sim.v < 0 && sim.t > 0.15) {\n          enterRampBack();\n          return;\n        }\n\n        if (shouldDetach({\n          theta: sim.theta,\n          speed: sim.v,\n          normalAcceleration: sim.normal / MASS\n        })) {\n          detach();\n          return;\n        }\n'''
+          new_loop = '''      function integrateLoop(dt) {\n        const next = stepLoopState({\n          radius: sim.R,\n          theta: sim.theta,\n          speed: sim.v\n        }, dt, G);\n        sim.v = next.speed;\n        sim.theta = next.theta;\n        sim.x = next.x;\n        sim.y = next.y;\n        sim.normal = MASS * next.normalAcceleration;\n\n        if (sim.theta <= 0 && sim.v < 0 && sim.t > 0.15) {\n          enterRampBack();\n          return;\n        }\n\n        if (window.VerticalLoopPhysics.shouldDetach({\n          theta: sim.theta,\n          speed: sim.v,\n          normalAcceleration: next.normalAcceleration\n        })) {\n          detach();\n          return;\n        }\n'''
+          if html.count(old_loop) != 1:
+              raise SystemExit('integrateLoop anchor not found exactly once')
+          html = html.replace(old_loop, new_loop, 1)
+          index_path.write_text(html, encoding='utf-8')
+
+          ci_path = Path('.github/workflows/pages.yml')
+          ci = ci_path.read_text(encoding='utf-8')
+          ci = ci.replace(
+              'node --test rollercoster_loop/tests/test_model.js rollercoster_loop/tests/test_integration.js',
+              'node --test rollercoster_loop/tests/test_model.js rollercoster_loop/tests/test_integration.js rollercoster_loop/tests/test_numerics.js'
+          )
+          ci_path.write_text(ci, encoding='utf-8')
+
+          integration_path = Path('rollercoster_loop/tests/test_integration.js')
+          integration = integration_path.read_text(encoding='utf-8')
+          integration = integration.replace(
+              "  assert.match(html, /<script src=\"physics-model\\.js\"><\\/script>/);\n  assert.match(html, /window\\.VerticalLoopPhysics/);",
+              "  assert.match(html, /<script src=\"physics-model\\.js\"><\\/script>/);\n  assert.match(html, /<script src=\"simulation-core\\.js\"><\\/script>/);\n  assert.match(html, /window\\.VerticalLoopPhysics/);\n  assert.match(html, /window\\.VerticalLoopSimulation/);"
+          )
+          integration = integration.replace(
+              "  assert.match(html, /tangentialAcceleration\\(sim\\.theta, G\\)/);\n  assert.match(html, /normalAccelerationFromState\\(sim\\.v, sim\\.R, sim\\.theta, G\\)/);\n  assert.match(html, /shouldDetach\\(\\{/);",
+              "  assert.match(html, /stepLoopState\\(\\{/);\n  assert.match(html, /VerticalLoopPhysics\\.shouldDetach\\(\\{/);"
+          )
+          integration += "\n\ntest('presentation styles are externalized', () => {\n  assert.match(html, /<link rel=\"stylesheet\" href=\"styles\\.css\">/);\n  assert.doesNotMatch(html, /<style>/);\n});\n"
+          integration_path.write_text(integration, encoding='utf-8')
+
+          readme_path = Path('README.md')
+          readme = readme_path.read_text(encoding='utf-8')
+          if 'simulations.json' not in readme:
+              readme = readme.replace(
+                  'See [`CONTENTS.md`](CONTENTS.md) for the project catalogue and [`REFERENCES.md`](REFERENCES.md) for the academic bibliography.',
+                  'See [`simulations.json`](simulations.json) for machine-readable simulation metadata, [`CONTENTS.md`](CONTENTS.md) for the human-readable catalogue, and [`REFERENCES.md`](REFERENCES.md) for the academic bibliography.'
+              )
+          readme_path.write_text(readme, encoding='utf-8')
+          PY
+
+      - name: Validate
+        run: |
+          node --test rollercoster_loop/tests/test_model.js rollercoster_loop/tests/test_integration.js rollercoster_loop/tests/test_numerics.js
+          python -m unittest discover -s rollercoster_loop/tests -p 'test_model.py' -v
+
+      - name: Commit generated refactor
+        run: |
+          rm .github/workflows/_apply_architecture.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Modularize simulation core and expand numerical validation"
+          git push origin HEAD:agent/physlab-architecture-tests
