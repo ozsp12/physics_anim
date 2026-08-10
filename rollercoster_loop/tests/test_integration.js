@@ -42,12 +42,15 @@ test('renderer and UI responsibilities are externalized', () => {
   assert.doesNotMatch(canonicalHtml, /<style>/);
 });
 
-test('canonical route exposes bilingual metadata and accessible status text', () => {
-  assert.match(canonicalHtml, /hreflang="pt-BR"/);
-  assert.match(canonicalHtml, /hreflang="en"/);
+test('canonical route is English-only and exposes accessible status text', () => {
+  assert.match(canonicalHtml, /<html lang="en">/);
+  assert.doesNotMatch(canonicalHtml, /hreflang="pt-BR"/);
+  assert.doesNotMatch(canonicalHtml, /id="langPt"|id="langEn"/);
   assert.match(canonicalHtml, /id="statusAnnouncer"[^>]*aria-live="polite"/);
   assert.match(canonicalHtml, /aria-describedby="simulationSummary"/);
   assert.doesNotMatch(canonicalHtml, /class="hud"[^>]*aria-live/);
+  assert.match(ui, /const locale = 'en-US'/);
+  assert.doesNotMatch(ui, /pt-BR/);
 });
 
 test('legacy misspelled URL redirects to canonical vertical-loop route', () => {
