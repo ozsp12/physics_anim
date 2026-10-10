@@ -41,6 +41,7 @@
       const map = {
         pageHeading: t.heading, pageSubtitle: t.subtitle, challengeChip: t.target, parametersTitle: t.parameters,
         heightLabel: t.height, radiusLabel: t.radius, timeLabel: t.time, playButton: t.start, resetButton: t.reset,
+        mobilePlayButton: t.start, mobileResetButton: t.reset,
         criticalButton: t.critical, vectorsLabel: t.vectors, trailLabel: t.trail, gridLabel: t.grid, predictionHeading: t.prediction,
         stateLabel: t.state, speedLabel: t.speed, scoreLabel: t.score, kineticLabel: t.kinetic, potentialLabel: t.potential,
         totalLabel: t.mechanical, modelSummary: t.model, modelText: t.modelText, footerText: t.shortcuts
