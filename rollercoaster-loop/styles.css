@@ -187,6 +187,8 @@ button:focus-visible { outline: 3px solid rgba(85, 200, 255, 0.4); outline-offse
 .prediction p { margin: 0; color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
 .stage { overflow: hidden; }
 
+.mobile-actions { display: none; }
+
 .hud {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -232,7 +234,8 @@ canvas {
   display: block;
   width: 100%;
   height: 100%;
-  touch-action: none;
+  /* Allow swiping to scroll past the noninteractive canvas on touch devices. */
+  touch-action: pan-y;
 }
 
 .canvas-message {
@@ -341,6 +344,15 @@ code {
   .layout { grid-template-columns: 1fr; }
   .controls { order: 2; }
   .stage { order: 1; }
+  .mobile-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 10px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+  }
+  .mobile-actions button { min-height: 48px; }
   .hud { grid-template-columns: repeat(3, 1fr); }
   .hud .metric:nth-child(4), .hud .metric:nth-child(5) { grid-column: span 1; }
 }
@@ -351,6 +363,6 @@ code {
   .challenge-chip { display: inline-block; margin-top: 10px; }
   .hud { grid-template-columns: repeat(2, 1fr); }
   .metric:last-child { grid-column: 1 / -1; }
-  .canvas-wrap { min-height: 310px; aspect-ratio: 4 / 3; }
+  .canvas-wrap { min-height: 260px; aspect-ratio: 4 / 3; }
   .energy { grid-template-columns: 1fr; }
 }

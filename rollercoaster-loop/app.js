@@ -46,6 +46,13 @@
     }
   };
 
+  function updatePlayControls(label) {
+    [el.playButton, el.mobilePlayButton].forEach(button => {
+      button.textContent = label;
+      button.setAttribute('aria-pressed', String(state.running));
+    });
+  }
+
   function setMessage(text, announce = false) {
     el.canvasMessage.textContent = text;
     if (announce) ui.announce(text);
@@ -99,7 +106,7 @@
     state.ramp = simulation.buildRamp(state.h, state.R);
     const p = simulation.sampleRamp(state.ramp, 0);
     state.x = p.x; state.y = p.y;
-    el.playButton.textContent = ui.t.start;
+    updatePlayControls(ui.t.start);
     setMessage(ui.t.prompt);
     updatePrediction(); updateHud(); renderer.resize(state);
     if (startImmediately) togglePlay();
@@ -110,11 +117,11 @@
     state.running = !state.running;
     if (state.running) {
       if (state.phase === 'ready') state.phase = 'ramp';
-      el.playButton.textContent = ui.t.pause;
+      updatePlayControls(ui.t.pause);
       setMessage(ui.t.running, true);
       state.lastTimestamp = performance.now();
     } else {
-      el.playButton.textContent = state.phase === 'ready' ? ui.t.start : ui.t.resume;
+      updatePlayControls(state.phase === 'ready' ? ui.t.start : ui.t.resume);
       setMessage(ui.t.paused, true);
     }
   }
@@ -122,7 +129,7 @@
   function finish(message) {
     state.running = false;
     state.phase = 'done';
-    el.playButton.textContent = ui.t.replay;
+    updatePlayControls(ui.t.replay);
     setMessage(message, true);
   }
 
@@ -220,7 +227,9 @@
   el.radiusRange.addEventListener('input', parametersChanged);
   el.timeRange.addEventListener('input', () => { state.timeScale = Number(el.timeRange.value); updateHud(); });
   el.playButton.addEventListener('click', togglePlay);
+  el.mobilePlayButton.addEventListener('click', togglePlay);
   el.resetButton.addEventListener('click', () => reset(false));
+  el.mobileResetButton.addEventListener('click', () => reset(false));
   el.criticalButton.addEventListener('click', () => { el.heightRange.value = Math.max(Number(el.heightRange.min), Math.min(Number(el.heightRange.max), physics.criticalHeight(Number(el.radiusRange.value)))).toFixed(2); parametersChanged(); });
   el.vectorsCheck.addEventListener('change', () => { state.showVectors = el.vectorsCheck.checked; renderer.draw(state); });
   el.trailCheck.addEventListener('change', () => { state.showTrail = el.trailCheck.checked; renderer.draw(state); });

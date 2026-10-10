@@ -38,6 +38,10 @@
 
       <section class="panel stage" aria-label="Vertical loop simulation">
         <div class="hud"><div class="metric"><span id="stateLabel">State</span><strong id="stateMetric">Ready</strong></div><div class="metric"><span>h/R</span><strong id="ratioMetric">2.500</strong></div><div class="metric"><span id="speedLabel">Speed</span><strong id="speedMetric">0.00 m/s</strong></div><div class="metric"><span>N/m</span><strong id="normalMetric">—</strong></div><div class="metric"><span id="scoreLabel">Score</span><strong id="scoreMetric">1000</strong></div></div>
+        <div class="mobile-actions" role="group" aria-label="Simulation playback">
+          <button class="primary" id="mobilePlayButton" type="button">Start</button>
+          <button id="mobileResetButton" type="button">Reset</button>
+        </div>
         <div class="canvas-wrap" id="canvasWrap"><canvas id="simCanvas" aria-label="Animated vertical-loop physics simulation" aria-describedby="simulationSummary"></canvas><div class="canvas-message" id="canvasMessage">Press Start or the Space bar</div></div>
         <div class="energy" aria-label="Mechanical energy distribution"><div class="energy-item kinetic"><span><b id="kineticLabel">Kinetic energy</b><b id="kineticText">0%</b></span><div class="bar"><i id="kineticBar"></i></div></div><div class="energy-item potential"><span><b id="potentialLabel">Potential energy</b><b id="potentialText">100%</b></span><div class="bar"><i id="potentialBar"></i></div></div><div class="energy-item total"><span><b id="totalLabel">Mechanical energy</b><b id="totalText">100%</b></span><div class="bar"><i id="totalBar"></i></div></div></div>
       </section>

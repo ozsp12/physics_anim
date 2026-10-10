@@ -14,11 +14,11 @@
       const xMax = Math.max(3.3 * state.R, 4.8);
       const yMin = -0.32 * Math.max(state.R, 1);
       const yMax = Math.max(state.h, 2 * state.R) + 0.6 * Math.max(state.R, 1);
-      const marginX = 48;
-      const marginY = 42;
+      const marginX = width < 600 ? 18 : 48;
+      const marginY = height < 400 ? 18 : 42;
       const scale = Math.min(
-        (width - 2 * marginX) / Math.max(1, xMax - xMin),
-        (height - 2 * marginY) / Math.max(1, yMax - yMin)
+        Math.max(1, width - 2 * marginX) / Math.max(1, xMax - xMin),
+        Math.max(1, height - 2 * marginY) / Math.max(1, yMax - yMin)
       );
       const usedW = (xMax - xMin) * scale;
       const usedH = (yMax - yMin) * scale;
